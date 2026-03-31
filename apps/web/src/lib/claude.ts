@@ -47,7 +47,7 @@ Keep it under 250 words. Use the child's first name. This is for Indian kinderga
   })
 
   const block = response.content[0]
-  if (block.type !== 'text') throw new Error('Unexpected response format')
+  if (!block || block.type !== 'text') throw new Error('Unexpected response format')
   return block.text
 }
 
@@ -69,6 +69,6 @@ export async function generateAttendanceInsight(input: {
   })
 
   const block = response.content[0]
-  if (block.type !== 'text') throw new Error('Unexpected response format')
+  if (!block || block.type !== 'text') throw new Error('Unexpected response format')
   return block.text
 }
