@@ -15,7 +15,13 @@
         "NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL",
         "NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL",
         "NEXT_PUBLIC_APP_URL",
-        "NEXT_PUBLIC_RAZORPAY_KEY_ID"
+        "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_SECRET",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "TWILIO_WHATSAPP_FROM",
+        "RESEND_API_KEY"
       ]
     },
     "dev": {
