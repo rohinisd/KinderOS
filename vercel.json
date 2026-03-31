@@ -1,0 +1,12 @@
+{
+  "buildCommand": "pnpm turbo build --filter=@kinderos/web",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
