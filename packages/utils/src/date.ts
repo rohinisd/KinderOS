@@ -54,7 +54,7 @@ export function getAcademicYearLabel(date?: Date): string {
 /** Get start and end of current academic year in UTC */
 export function getAcademicYearRange(label?: string): { start: Date; end: Date } {
   const current = label ?? getAcademicYearLabel()
-  const startYear = parseInt(current.split('-')[0])
+  const startYear = parseInt(current.split('-')[0] ?? current)
   return {
     start: new Date(Date.UTC(startYear, 3, 1)),
     end: new Date(Date.UTC(startYear + 1, 2, 31, 23, 59, 59)),
