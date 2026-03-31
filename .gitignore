@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+
+# env files (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+APIKeys.md
+
+# build outputs
+.next/
+out/
+dist/
+build/
+
+# turbo
+.turbo
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# IDE
+.vscode/
+!.vscode/extensions.json
+.idea/
+
+# generated
+packages/db/prisma/migrations/
+packages/db/node_modules/.prisma/
+
+# vercel
+.vercel

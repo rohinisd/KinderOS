@@ -1,0 +1,307 @@
+# ============================================================
+# KinderOS — Cursor AI Rules
+# Multi-tenant SaaS for Kindergarten Schools (India)
+# ============================================================
+# This file governs ALL code generation in this project.
+# Never deviate from these conventions.
+
+## PROJECT IDENTITY
+You are building KinderOS — a multi-tenant B2B SaaS platform for
+kindergarten schools in India. Each school is an isolated tenant.
+The product has 5 portals: Owner Dashboard, Teacher Dashboard,
+Admin Staff Portal, Parent Mobile App, and School Public Website.
+There is also a Super Admin panel for platform management.
+
+## TECH STACK — NEVER DEVIATE
+- Framework:     Next.js 14 App Router (TypeScript, strict mode)
+- Database:      Supabase (PostgreSQL) with Row Level Security
+- ORM:           Prisma 5.x
+- Auth:          Clerk (org-level multi-tenancy — each school = 1 Clerk org)
+- Styling:       Tailwind CSS + shadcn/ui components
+- Payments:      Razorpay (fee collection, payment links, webhooks)
+- Messaging:     Twilio (WhatsApp Business API + SMS)
+- File Storage:  Cloudflare R2 (photos, documents, receipts)
+- Email:         Resend
+- AI:            Anthropic Claude API (progress report generation, smart alerts)
+- PDF:           react-pdf / puppeteer (fee receipts, reports)
+- Push notif:    Firebase Cloud Messaging
+- Deployment:    Vercel (preview per PR, prod on main)
+
+## MONOREPO STRUCTURE
+```
+kinderos/
+├── apps/
+│   ├── web/          # Next.js app — all portals + public pages
+│   └── mobile/       # React Native (Expo) — Parent app (Phase 2)
+├── packages/
+│   ├── db/           # Prisma schema + generated client
+│   ├── ui/           # Shared shadcn/ui components
+│   ├── config/       # Shared ESLint, TS, Tailwind config
+│   └── utils/        # Shared helpers (formatters, validators)
+├── .cursorrules
+├── package.json      # pnpm workspace root
+└── turbo.json
+```
+
+## APP ROUTER CONVENTIONS (apps/web)
+```
+src/
+├── app/
+│   ├── (public)/                    # School public pages (no auth)
+│   │   └── [schoolSlug]/            # e.g. /little-stars
+│   │       ├── page.tsx             # Landing page
+│   │       ├── admissions/page.tsx
+│   │       └── blog/[slug]/page.tsx
+│   ├── (auth)/                      # Clerk auth pages
+│   │   ├── sign-in/[[...sign-in]]/
+│   │   └── sign-up/[[...sign-up]]/
+│   ├── (owner)/                     # School owner portal
+│   │   └── dashboard/
+│   │       ├── layout.tsx           # Sidebar layout
+│   │       ├── page.tsx             # Overview
+│   │       ├── students/
+│   │       ├── teachers/
+│   │       ├── fees/
+│   │       ├── attendance/
+│   │       ├── admissions/
+│   │       ├── announcements/
+│   │       ├── customize/           # Customization Studio
+│   │       ├── analytics/
+│   │       └── settings/
+│   ├── (teacher)/                   # Teacher portal
+│   │   └── classroom/
+│   │       ├── layout.tsx
+│   │       ├── page.tsx
+│   │       ├── attendance/
+│   │       ├── assignments/
+│   │       ├── parents/
+│   │       └── reports/
+│   ├── (admin)/                     # Admin staff portal
+│   │   └── office/
+│   │       ├── layout.tsx
+│   │       ├── fees/
+│   │       ├── receipts/
+│   │       └── admissions/
+│   ├── (parent)/                    # Parent portal (web version)
+│   │   └── parent/
+│   │       ├── layout.tsx
+│   │       ├── page.tsx             # Child's day feed
+│   │       ├── fees/
+│   │       └── gallery/
+│   └── (superadmin)/                # Platform super admin
+│       └── admin/
+│           ├── tenants/
+│           ├── billing/
+│           └── feature-flags/
+├── components/
+│   ├── ui/           # shadcn primitives (re-exported from packages/ui)
+│   ├── layout/       # Sidebar, TopBar, PageHeader
+│   ├── charts/       # Recharts wrappers
+│   ├── forms/        # React Hook Form + Zod forms
+│   └── modals/       # Sheet / Dialog wrappers
+├── lib/
+│   ├── auth.ts       # Clerk helpers + school context
+│   ├── prisma.ts     # Prisma client singleton
+│   ├── razorpay.ts   # Razorpay SDK wrapper
+│   ├── twilio.ts     # WhatsApp / SMS helpers
+│   ├── r2.ts         # Cloudflare R2 upload helpers
+│   ├── claude.ts     # Anthropic API helpers
+│   └── utils.ts      # General utilities
+├── actions/          # Next.js Server Actions (one file per domain)
+│   ├── students.ts
+│   ├── fees.ts
+│   ├── attendance.ts
+│   ├── announcements.ts
+│   └── ...
+└── middleware.ts     # Clerk auth + tenant routing
+```
+
+## MULTI-TENANCY RULES
+- Every DB query MUST include `schoolId` filter. No exceptions.
+- Get schoolId from Clerk org: `auth().orgId` — never trust client-sent schoolId.
+- Use Supabase RLS policies as a second layer of defense.
+- School slug (e.g. "little-stars") routes to their public page.
+- Tenant isolation is the #1 security requirement.
+
+```typescript
+// ALWAYS do this pattern — never skip the schoolId filter
+const students = await prisma.student.findMany({
+  where: { schoolId: getSchoolId() }, // from Clerk org
+  orderBy: { createdAt: 'desc' },
+})
+
+// getSchoolId helper in lib/auth.ts
+export function getSchoolId(): string {
+  const { orgId } = auth()
+  if (!orgId) throw new Error('Unauthorized')
+  return orgId
+}
+```
+
+## INDIAN MARKET CONVENTIONS — MANDATORY
+- **Money**: Always store in PAISE (integer). Display with `formatCurrency()`.
+  ```typescript
+  // Storage: 1250000 paise = ₹12,500
+  // Never store floats for money
+  export function formatCurrency(paise: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency', currency: 'INR', minimumFractionDigits: 0
+    }).format(paise / 100)
+  }
+  ```
+- **Dates**: Store as UTC in DB. Display in IST (`Asia/Kolkata`).
+  ```typescript
+  export function toIST(date: Date): string {
+    return new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    }).format(date) // DD/MM/YYYY format
+  }
+  ```
+- **Phone numbers**: Always store with country code (+91). Validate Indian numbers.
+- **GST**: Fee invoices must have CGST/SGST (same state) or IGST (different state) logic.
+  State code for Karnataka = 29.
+- **Academic year**: April–March (not Jan–Dec). Always label as "2025–26".
+
+## SERVER ACTIONS PATTERN
+Use Next.js Server Actions for all mutations. Never call API routes for mutations.
+```typescript
+// actions/fees.ts
+'use server'
+import { auth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const CreateFeeSchema = z.object({
+  studentId: z.string().cuid(),
+  amount: z.number().int().positive(), // in paise
+  dueDate: z.date(),
+  description: z.string().min(1).max(200),
+})
+
+export async function createFeeInvoice(input: z.infer<typeof CreateFeeSchema>) {
+  const { orgId, userId } = auth()
+  if (!orgId || !userId) throw new Error('Unauthorized')
+
+  const validated = CreateFeeSchema.parse(input)
+
+  const invoice = await prisma.feeInvoice.create({
+    data: {
+      ...validated,
+      schoolId: orgId,
+      createdBy: userId,
+      status: 'PENDING',
+    }
+  })
+
+  // Send WhatsApp notification to parent
+  await sendFeeReminderWhatsApp(invoice.id)
+
+  revalidatePath('/dashboard/fees')
+  return invoice
+}
+```
+
+## DATA FETCHING PATTERN
+Use React Server Components for all data fetching. No useEffect for data.
+```typescript
+// app/(owner)/dashboard/fees/page.tsx
+import { prisma } from '@/lib/prisma'
+import { getSchoolId } from '@/lib/auth'
+
+export default async function FeesPage() {
+  const schoolId = getSchoolId()
+  
+  const [invoices, stats] = await Promise.all([
+    prisma.feeInvoice.findMany({
+      where: { schoolId },
+      include: { student: { include: { parents: true } } },
+      orderBy: { dueDate: 'asc' },
+    }),
+    getFeeStats(schoolId),
+  ])
+
+  return <FeesClient invoices={invoices} stats={stats} />
+}
+```
+
+## COMPONENT CONVENTIONS
+- Use shadcn/ui primitives everywhere. Don't build custom buttons/inputs.
+- All forms use React Hook Form + Zod. No uncontrolled forms.
+- All tables use TanStack Table v8.
+- All modals use shadcn Sheet (side panel) for forms, Dialog for confirmations.
+- Loading states: use Suspense + skeleton components (shadcn Skeleton).
+- Error states: use error.tsx + toast (shadcn Sonner).
+
+## RAZORPAY INTEGRATION
+```typescript
+// lib/razorpay.ts
+// Fee collection flow:
+// 1. Create Razorpay Order on server
+// 2. Load Razorpay checkout on client
+// 3. Webhook confirms payment → update DB + send receipt
+// Always verify webhook signature before updating DB
+```
+
+## WHATSAPP / TWILIO PATTERN
+All WhatsApp sends go through lib/twilio.ts. Use template messages for:
+- Fee reminders (template: fee_reminder)
+- Absence alerts (template: student_absent)
+- Announcement broadcasts (template: school_announcement)
+- Payment receipts (template: fee_receipt)
+
+## AI PROGRESS REPORT GENERATION
+```typescript
+// lib/claude.ts — Server-side only, never expose API key to client
+export async function generateProgressReport(input: {
+  studentName: string
+  className: string
+  teacherNotes: string
+  attendancePercent: number
+  subjectRatings: Record<string, number>
+}): Promise<string> {
+  const response = await anthropic.messages.create({
+    model: 'claude-opus-4-6',
+    max_tokens: 800,
+    messages: [{
+      role: 'user',
+      content: `Generate a warm, encouraging kindergarten progress report for...`
+    }]
+  })
+  return response.content[0].text
+}
+```
+
+## ERROR HANDLING
+- Use `Result<T, E>` pattern for Server Actions, not try/catch in components.
+- Always show toast on success and error.
+- Log errors to console.error in dev; use Sentry in prod.
+
+## FILE NAMING
+- Components: PascalCase (StudentTable.tsx)
+- Hooks: camelCase with use prefix (useStudents.ts)
+- Actions: camelCase (createStudent.ts)
+- Utils: camelCase (formatCurrency.ts)
+- API routes: lowercase with hyphens (fee-webhook.ts)
+
+## TAILWIND CONVENTIONS
+- Use cn() from @/lib/utils for conditional classes
+- Semantic color tokens only: don't hardcode hex values in components
+- Mobile-first responsive design
+- Indian language support: ensure text renders well with Devanagari if needed
+
+## ENVIRONMENT VARIABLES
+All env vars must be in .env.local (gitignored). See .env.example for all required vars.
+Server-only vars: no NEXT_PUBLIC_ prefix.
+Client-safe vars only: NEXT_PUBLIC_ prefix.
+
+## WHAT NOT TO DO
+- Never use pages/ router. App Router only.
+- Never store money as float. Paise integers only.
+- Never skip schoolId in DB queries.
+- Never call Razorpay / Twilio / Claude from client components.
+- Never use any for TypeScript types. Strict types always.
+- Never use inline styles. Tailwind classes only.
+- Never create custom color schemes. Use the design system.
+- Never commit .env files. Use .env.example.

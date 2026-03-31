@@ -1,0 +1,11 @@
+{
+  "name": "@kinderos/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./tsconfig/base": "./tsconfig/base.json",
+    "./tsconfig/nextjs": "./tsconfig/nextjs.json",
+    "./tailwind": "./tailwind/tailwind.config.ts",
+    "./eslint/next": "./eslint/next.js"
+  }
+}

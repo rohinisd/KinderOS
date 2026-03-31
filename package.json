@@ -1,0 +1,28 @@
+{
+  "name": "kinderos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KinderOS — Multi-tenant SaaS for Kindergarten Schools (India)",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "typecheck": "turbo typecheck",
+    "db:push": "pnpm --filter @kinderos/db prisma db push",
+    "db:studio": "pnpm --filter @kinderos/db prisma studio",
+    "db:seed": "pnpm --filter @kinderos/db prisma db seed",
+    "db:generate": "pnpm --filter @kinderos/db prisma generate",
+    "db:migrate": "pnpm --filter @kinderos/db prisma migrate dev"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

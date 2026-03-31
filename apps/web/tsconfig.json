@@ -1,0 +1,14 @@
+{
+  "extends": "../../packages/config/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@kinderos/db": ["../../packages/db"],
+      "@kinderos/ui": ["../../packages/ui/src"],
+      "@kinderos/utils": ["../../packages/utils/src"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
