@@ -113,7 +113,7 @@ async function autoProvisionStaff(
  * Auto-provisions School + Staff records on first access.
  */
 export async function requireSchoolAuth() {
-  const { orgId, userId, orgRole } = auth()
+  const { orgId, userId, orgRole } = await auth()
   if (!orgId || !userId) throw new Error('Unauthorized')
 
   const school = await autoProvisionSchool(orgId)
@@ -143,22 +143,22 @@ export async function requireTeacher() {
 }
 
 /** Get schoolId from Clerk org. Every tenant-scoped query MUST use this. */
-export function getSchoolId(): string {
-  const { orgId } = auth()
+export async function getSchoolId(): Promise<string> {
+  const { orgId } = await auth()
   if (!orgId) throw new Error('Unauthorized — no school context')
   return orgId
 }
 
 /** Get current user's Clerk ID */
-export function getUserId(): string {
-  const { userId } = auth()
+export async function getUserId(): Promise<string> {
+  const { userId } = await auth()
   if (!userId) throw new Error('Unauthorized')
   return userId
 }
 
 /** Get the Clerk org role */
-export function getUserRole(): string | null {
-  const { orgRole } = auth()
+export async function getUserRole(): Promise<string | null> {
+  const { orgRole } = await auth()
   return orgRole ?? null
 }
 
