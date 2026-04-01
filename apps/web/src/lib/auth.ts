@@ -164,7 +164,7 @@ export async function getUserRole(): Promise<string | null> {
 
 /** Get the current user's staff record in DB */
 export async function getStaffRecord() {
-  const userId = getUserId()
+  const userId = await getUserId()
   return prisma.staff.findUnique({
     where: { clerkUserId: userId },
     include: { school: true },
