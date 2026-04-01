@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { PageHeader } from '@/components/layout/page-header'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TenantsPage() {
   const schools = await prisma.school.findMany({
     orderBy: { createdAt: 'desc' },

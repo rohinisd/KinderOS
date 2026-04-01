@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { PageHeader } from '@/components/layout/page-header'
 
+export const dynamic = 'force-dynamic'
+
 export default async function FeatureFlagsPage() {
   const flags = await prisma.featureFlag.findMany({
     orderBy: { key: 'asc' },
