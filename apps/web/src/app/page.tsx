@@ -1,18 +1,8 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-export default async function HomePage() {
-  const { userId, orgRole } = await auth()
-
-  if (userId) {
-    if (orgRole === 'org:admin') redirect('/dashboard')
-    if (orgRole === 'org:teacher') redirect('/classroom')
-    redirect('/dashboard')
-  }
-
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-500 via-accent-500 to-brand-700">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800">
       <div className="mx-auto max-w-2xl px-6 text-center">
         <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl">
           KinderOS
@@ -26,7 +16,7 @@ export default async function HomePage() {
         <div className="mt-10 flex items-center justify-center gap-4">
           <Link
             href="/sign-in"
-            className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-brand-600 shadow-lg transition hover:bg-white/90"
+            className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-purple-700 shadow-lg transition hover:bg-white/90"
           >
             Sign In
           </Link>
