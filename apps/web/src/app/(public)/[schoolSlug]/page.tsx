@@ -5,10 +5,11 @@ import Link from 'next/link'
 export default async function SchoolPublicPage({
   params,
 }: {
-  params: { schoolSlug: string }
+  params: Promise<{ schoolSlug: string }>
 }) {
+  const { schoolSlug } = await params
   const school = await prisma.school.findUnique({
-    where: { slug: params.schoolSlug, isActive: true },
+    where: { slug: schoolSlug, isActive: true },
     include: {
       announcements: {
         where: { status: 'PUBLISHED' },
@@ -48,7 +49,7 @@ export default async function SchoolPublicPage({
             <p className="mt-3 text-xl text-white/80">{school.tagline}</p>
           )}
           <Link
-            href={`/${params.schoolSlug}/admissions`}
+            href={`/${schoolSlug}/admissions`}
             className="mt-8 inline-block rounded-lg bg-white px-8 py-3 font-semibold text-gray-900 shadow-lg transition hover:bg-white/90"
           >
             Apply for Admission

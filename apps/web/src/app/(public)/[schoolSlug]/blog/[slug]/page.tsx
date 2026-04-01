@@ -4,16 +4,17 @@ import { notFound } from 'next/navigation'
 export default async function BlogPostPage({
   params,
 }: {
-  params: { schoolSlug: string; slug: string }
+  params: Promise<{ schoolSlug: string; slug: string }>
 }) {
+  const { schoolSlug, slug } = await params
   const school = await prisma.school.findUnique({
-    where: { slug: params.schoolSlug, isActive: true },
+    where: { slug: schoolSlug, isActive: true },
   })
   if (!school) notFound()
 
   const post = await prisma.blogPost.findUnique({
     where: {
-      schoolId_slug: { schoolId: school.id, slug: params.slug },
+      schoolId_slug: { schoolId: school.id, slug },
       status: 'PUBLISHED',
     },
   })

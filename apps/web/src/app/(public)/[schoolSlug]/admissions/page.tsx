@@ -4,10 +4,11 @@ import { notFound } from 'next/navigation'
 export default async function AdmissionFormPage({
   params,
 }: {
-  params: { schoolSlug: string }
+  params: Promise<{ schoolSlug: string }>
 }) {
+  const { schoolSlug } = await params
   const school = await prisma.school.findUnique({
-    where: { slug: params.schoolSlug, isActive: true },
+    where: { slug: schoolSlug, isActive: true },
   })
 
   if (!school) notFound()
