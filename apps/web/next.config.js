@@ -14,6 +14,7 @@ const nextConfig = {
   },
 
   experimental: {
+    nodeMiddleware: true,
     serverActions: {
       bodySizeLimit: '4mb',
     },
