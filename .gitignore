@@ -29,6 +29,7 @@ build/
 # generated
 packages/db/prisma/migrations/
 packages/db/node_modules/.prisma/
+packages/db/generated/
 
 # vercel
 .vercel

@@ -4,13 +4,15 @@ const path = require('path')
 const nextConfig = {
   output: 'standalone',
 
-  // Monorepo: tell standalone output to trace from the workspace root
   outputFileTracingRoot: path.join(__dirname, '../../'),
 
-  transpilePackages: ['@kinderos/ui', '@kinderos/utils'],
+  transpilePackages: ['@kinderos/ui', '@kinderos/utils', '@kinderos/db'],
 
-  // Keep Prisma client external so the engine binary is found at runtime
   serverExternalPackages: ['@prisma/client', 'prisma'],
+
+  outputFileTracingIncludes: {
+    '/*': ['../../packages/db/generated/**/*'],
+  },
 
   images: {
     remotePatterns: [
