@@ -62,7 +62,8 @@ export function AttendanceClient({
       const current = prev[studentId] ?? 'PRESENT'
       const order: AttendanceStatus[] = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY']
       const nextIdx = (order.indexOf(current) + 1) % order.length
-      return { ...prev, [studentId]: order[nextIdx] }
+      const next: AttendanceStatus = order[nextIdx] ?? 'PRESENT'
+      return { ...prev, [studentId]: next }
     })
     setSaved(false)
   }
