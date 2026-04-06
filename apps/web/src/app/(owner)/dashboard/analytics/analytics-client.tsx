@@ -127,7 +127,7 @@ export function AnalyticsClient({
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={({ name, value }: { name: string; value: number }) => `${name}: ${value}`}
+                    label
                   >
                     {feeData.map((entry) => (
                       <Cell key={entry.status} fill={FEE_COLORS[entry.status] ?? '#6b7280'} />
