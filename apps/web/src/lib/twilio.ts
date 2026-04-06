@@ -1,6 +1,4 @@
 import twilio from 'twilio'
-import { prisma } from './prisma'
-
 const isConfigured = !!(
   process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
 )

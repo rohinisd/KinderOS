@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-
 /**
  * Clerk Webhook handler — OPTIONAL.
  * Only needed on Clerk paid plans. On free tier, school records
@@ -13,7 +11,7 @@ import { prisma } from '@/lib/prisma'
  *    URL: https://your-app.vercel.app/api/webhooks/clerk
  *    Events: organization.created, organization.updated
  */
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
   // If no secret configured, webhook is disabled (using auto-provision instead)

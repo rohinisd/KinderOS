@@ -18,7 +18,6 @@ import {
   MessageSquare,
   FileText,
   Receipt,
-  Image,
   Building2,
   CreditCard,
   ToggleLeft,
