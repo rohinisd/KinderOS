@@ -1,16 +1,21 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/topbar'
+import { requireAuth } from '@/lib/auth'
 
-export default function SuperAdminLayout({
+export const dynamic = 'force-dynamic'
+
+export default async function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  await requireAuth()
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar portal="superadmin" />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopBar />
+        <TopBar schoolName="Super Admin" />
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
           {children}
         </main>
