@@ -43,7 +43,10 @@ export function AttendanceClient({
   todayRecords: AttendanceRecord[]
 }) {
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id ?? '')
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(() => {
+    const iso = new Date().toISOString()
+    return iso.slice(0, 10)
+  })
   const [records, setRecords] = useState<Record<string, AttendanceStatus>>(() => {
     const initial: Record<string, AttendanceStatus> = {}
     todayRecords.forEach((r) => {
@@ -86,7 +89,7 @@ export function AttendanceClient({
 
       const result = await markClassAttendance({
         classId: selectedClassId,
-        date: new Date(date),
+        date: new Date(date + 'T00:00:00Z'),
         records: attendanceRecords,
       })
 
@@ -100,9 +103,9 @@ export function AttendanceClient({
   }
 
   function shiftDate(days: number) {
-    const d = new Date(date)
+    const d = new Date(date + 'T00:00:00Z')
     d.setDate(d.getDate() + days)
-    setDate(d.toISOString().split('T')[0])
+    setDate(d.toISOString().slice(0, 10))
     setSaved(false)
   }
 
