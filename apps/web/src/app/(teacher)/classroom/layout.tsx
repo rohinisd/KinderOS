@@ -1,22 +1,26 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/topbar'
-import { requireTeacher, getAuthUser } from '@/lib/auth'
+import { getAuthUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
+
+const TEACHER_ROLES = ['OWNER', 'PRINCIPAL', 'CLASS_TEACHER', 'SUBJECT_TEACHER']
 
 export default async function TeacherLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  await requireTeacher()
   const user = await getAuthUser()
+  if (!user) redirect('/sign-in')
+  if (!TEACHER_ROLES.includes(user.role)) redirect('/dashboard')
 
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar portal="teacher" />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopBar schoolName={user?.school.name} />
+        <TopBar schoolName={user.school.name} />
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
           {children}
         </main>
