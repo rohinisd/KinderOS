@@ -1,37 +1,47 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { PrismaClient } from '@kinderos/db'
 
 export async function GET() {
   const checks: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
-    node_version: process.version,
   }
 
-  // Check Clerk env
-  checks.clerk_pub_key = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  checks.clerk_secret = !!process.env.CLERK_SECRET_KEY
+  const password = 'KinderOSDB123%24'
+  const projectRef = 'misrvkkrwzbducorbbpa'
+  const regions = [
+    'aws-0-ap-south-1',
+    'aws-0-ap-southeast-1',
+    'aws-0-us-east-1',
+    'aws-0-eu-west-1',
+    'aws-0-us-west-1',
+    'aws-0-eu-central-1',
+    'aws-0-ap-northeast-1',
+    'aws-0-sa-east-1',
+  ]
 
-  // Check DB env
-  checks.database_url = !!process.env.DATABASE_URL
-  checks.direct_url = !!process.env.DIRECT_URL
-
-  // Check Clerk auth
-  try {
-    const { userId } = await auth()
-    checks.clerk_userId = userId ?? 'not signed in'
-  } catch (e) {
-    checks.clerk_error = e instanceof Error ? e.message : String(e)
+  for (const region of regions) {
+    const url = `postgresql://postgres.${projectRef}:${password}@${region}.pooler.supabase.com:6543/postgres?pgbouncer=true`
+    const prisma = new PrismaClient({ datasources: { db: { url } } })
+    try {
+      const count = await prisma.$queryRaw`SELECT 1 as ok`
+      checks[region] = 'SUCCESS'
+      await prisma.$disconnect()
+      break
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      checks[region] = msg.includes('Tenant') ? 'wrong region' : msg.substring(0, 80)
+      await prisma.$disconnect()
+    }
   }
 
-  // Check Prisma connection
+  // Also test current DATABASE_URL
   try {
-    const { prisma } = await import('@/lib/prisma')
-    const count = await prisma.school.count()
-    checks.db_connected = true
-    checks.school_count = count
+    const prisma = new PrismaClient()
+    await prisma.$queryRaw`SELECT 1 as ok`
+    checks.current_db_url = 'SUCCESS'
+    await prisma.$disconnect()
   } catch (e) {
-    checks.db_connected = false
-    checks.db_error = e instanceof Error ? e.message : String(e)
+    checks.current_db_url = e instanceof Error ? e.message.substring(0, 100) : String(e)
   }
 
   return NextResponse.json(checks)
