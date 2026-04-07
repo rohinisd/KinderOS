@@ -47,6 +47,10 @@ function staffToAuthUser(staff: {
   }
 }
 
+/**
+ * Try to link a pre-created Staff record (invited by owner) to this Clerk user.
+ * Matches by email where clerkUserId is null (not yet claimed).
+ */
 async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
   try {
     const client = await clerkClient()
@@ -73,7 +77,14 @@ async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
   }
 }
 
-async function provisionOwner(clerkUserId: string): Promise<AuthUser | null> {
+/**
+ * Auto-provision a new School + Owner for the VERY FIRST user only.
+ * After the first school exists, new users MUST be invited.
+ */
+async function provisionFirstOwner(clerkUserId: string): Promise<AuthUser | null> {
+  const schoolCount = await prisma.school.count()
+  if (schoolCount > 0) return null
+
   try {
     const client = await clerkClient()
     const clerkUser = await client.users.getUser(clerkUserId)
@@ -130,36 +141,39 @@ async function provisionOwner(clerkUserId: string): Promise<AuthUser | null> {
       },
     }
   } catch (e) {
-    console.error('[auth] provisionOwner failed:', e)
-
-    // Race condition: another request may have already provisioned.
-    // Check if the record now exists.
+    console.error('[auth] provisionFirstOwner failed:', e)
     const staff = await prisma.staff.findUnique({
       where: { clerkUserId },
       include: { school: true },
     })
     if (staff) return staffToAuthUser(staff, clerkUserId)
-
     return null
   }
 }
 
 // ─── Public helpers ───────────────────────────────────
 
-let provisioningMap = new Map<string, Promise<AuthUser | null>>()
+const provisioningMap = new Map<string, Promise<AuthUser | null>>()
 
+/**
+ * Get the authenticated user with their school context.
+ * Returns null if:
+ *   - Not signed in
+ *   - Signed in but no Staff record exists (not invited)
+ *
+ * Auto-provisions ONLY the very first user as Owner.
+ * All subsequent users must be pre-invited by the owner.
+ */
 export async function getAuthUser(): Promise<AuthUser | null> {
   const { userId } = await auth()
   if (!userId) return null
 
-  // Fast path: user already has a Staff record
   const staff = await prisma.staff.findUnique({
     where: { clerkUserId: userId },
     include: { school: true },
   })
   if (staff) return staffToAuthUser(staff, userId)
 
-  // Deduplicate concurrent provisioning calls for the same user
   if (provisioningMap.has(userId)) {
     return provisioningMap.get(userId)!
   }
@@ -167,7 +181,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   const promise = (async () => {
     const linked = await linkStaffByEmail(userId)
     if (linked) return linked
-    return provisionOwner(userId)
+    return provisionFirstOwner(userId)
   })()
 
   provisioningMap.set(userId, promise)
@@ -178,9 +192,17 @@ export async function getAuthUser(): Promise<AuthUser | null> {
   }
 }
 
+/**
+ * Require authenticated + authorized user.
+ * Redirects to /no-access if signed in but not invited.
+ * Redirects to /sign-in if not signed in.
+ */
 export async function requireAuth(): Promise<AuthUser> {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
   const user = await getAuthUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/no-access')
   if (!user.school.isActive) throw new Error('School is inactive')
   return user
 }
@@ -197,7 +219,7 @@ export async function requireSchoolAuth() {
 
 export async function requireOwner() {
   const user = await requireAuth()
-  if (user.role !== 'OWNER') redirect('/dashboard')
+  if (user.role !== 'OWNER') redirect('/no-access')
   return {
     schoolId: user.school.id,
     clerkOrgId: user.clerkUserId,
@@ -209,7 +231,7 @@ export async function requireOwner() {
 export async function requireTeacher() {
   const user = await requireAuth()
   if (user.role !== 'OWNER' && user.role !== 'CLASS_TEACHER' && user.role !== 'SUBJECT_TEACHER' && user.role !== 'PRINCIPAL') {
-    redirect('/dashboard')
+    redirect('/no-access')
   }
   return {
     schoolId: user.school.id,
