@@ -428,7 +428,9 @@ model Payment {
   status          PaymentStatus @default(PENDING)
   receiptNumber   String?       // RCP-2025-00001
   receiptUrl      String?
-  
+  referenceNumber String?
+  receivedBy      String?
+
   paidAt          DateTime?
   createdAt       DateTime      @default(now())
 
@@ -446,6 +448,7 @@ enum PaymentMethod {
   RAZORPAY_CARD
   RAZORPAY_NETBANKING
   CASH
+  UPI
   BANK_TRANSFER
   CHEQUE
 }

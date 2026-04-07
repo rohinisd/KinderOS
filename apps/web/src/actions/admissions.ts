@@ -41,6 +41,7 @@ export async function createAdmissionLead(
     })
 
     revalidatePath('/dashboard/admissions')
+    revalidatePath('/office/admissions')
     return ok({ leadId: lead.id })
   } catch (error) {
     console.error('[createAdmissionLead]', error)
@@ -74,6 +75,7 @@ export async function updateLeadStage(
     ])
 
     revalidatePath('/dashboard/admissions')
+    revalidatePath('/office/admissions')
     return ok({ success: true })
   } catch (error) {
     console.error('[updateLeadStage]', error)
@@ -97,6 +99,7 @@ export async function addLeadNote(
     })
 
     revalidatePath('/dashboard/admissions')
+    revalidatePath('/office/admissions')
     return ok({ activityId: activity.id })
   } catch (error) {
     console.error('[addLeadNote]', error)
