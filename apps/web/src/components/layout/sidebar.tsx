@@ -46,9 +46,13 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Reports', href: '/classroom/reports', icon: FileText },
   ],
   admin: [
+    { label: 'Students', href: '/office/students', icon: Users },
+    { label: 'Staff', href: '/office/staff', icon: GraduationCap },
     { label: 'Fee Collection', href: '/office/fees', icon: IndianRupee },
     { label: 'Receipts', href: '/office/receipts', icon: Receipt },
+    { label: 'Attendance', href: '/office/attendance', icon: CalendarCheck },
     { label: 'Admissions', href: '/office/admissions', icon: UserPlus },
+    { label: 'Announcements', href: '/office/announcements', icon: Megaphone },
   ],
   superadmin: [
     { label: 'Schools', href: '/admin/tenants', icon: Building2 },

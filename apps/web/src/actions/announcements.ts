@@ -60,6 +60,7 @@ export async function createAnnouncement(
     }
 
     revalidatePath('/dashboard/announcements')
+    revalidatePath('/office/announcements')
     return ok({ announcementId: announcement.id })
   } catch (error) {
     console.error('[createAnnouncement]', error)

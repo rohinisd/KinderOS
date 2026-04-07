@@ -78,6 +78,7 @@ export async function markClassAttendance(
 
     revalidatePath('/classroom/attendance')
     revalidatePath('/dashboard/attendance')
+    revalidatePath('/office/attendance')
     return ok({ count: results.length })
   } catch (error) {
     console.error('[markClassAttendance]', error)

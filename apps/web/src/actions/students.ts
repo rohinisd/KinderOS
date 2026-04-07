@@ -64,6 +64,7 @@ export async function createStudent(
     })
 
     revalidatePath('/dashboard/students')
+    revalidatePath('/office/students')
     return ok({ studentId: student.id })
   } catch (error) {
     console.error('[createStudent]', error)
@@ -110,6 +111,7 @@ export async function updateStudent(
     })
 
     revalidatePath('/dashboard/students')
+    revalidatePath('/office/students')
     return ok({ studentId: student.id })
   } catch (error) {
     console.error('[updateStudent]', error)
@@ -132,6 +134,7 @@ export async function deleteStudent(
     })
 
     revalidatePath('/dashboard/students')
+    revalidatePath('/office/students')
     return ok({ success: true })
   } catch (error) {
     console.error('[deleteStudent]', error)

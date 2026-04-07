@@ -44,6 +44,7 @@ export async function createStaff(
     })
 
     revalidatePath('/dashboard/teachers')
+    revalidatePath('/office/staff')
     return ok({ staffId: staff.id })
   } catch (error) {
     console.error('[createStaff]', error)
@@ -76,6 +77,7 @@ export async function updateStaff(
     })
 
     revalidatePath('/dashboard/teachers')
+    revalidatePath('/office/staff')
     return ok({ staffId: staff.id })
   } catch (error) {
     console.error('[updateStaff]', error)
@@ -98,6 +100,7 @@ export async function deleteStaff(
     })
 
     revalidatePath('/dashboard/teachers')
+    revalidatePath('/office/staff')
     return ok({ success: true })
   } catch (error) {
     console.error('[deleteStaff]', error)
