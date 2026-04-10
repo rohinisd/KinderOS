@@ -120,7 +120,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
  */
 export async function requireAuth(): Promise<AuthUser> {
   const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  if (!userId) redirect('/')
 
   const user = await getAuthUser()
   if (!user) redirect('/no-access')

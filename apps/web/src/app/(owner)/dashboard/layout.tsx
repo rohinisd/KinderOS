@@ -11,8 +11,8 @@ export default async function OwnerDashboardLayout({
   children: React.ReactNode
 }) {
   const user = await getAuthUser()
-  if (!user) redirect('/sign-in')
-  if (user.role !== 'OWNER') redirect('/sign-in')
+  if (!user) redirect('/no-access')
+  if (user.role !== 'OWNER') redirect('/no-access')
 
   return (
     <div className="flex h-screen overflow-hidden">

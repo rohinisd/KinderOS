@@ -10,7 +10,7 @@ export default async function ParentLayout({
   children: React.ReactNode
 }) {
   const user = await getAuthUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/no-access')
 
   return (
     <div className="flex min-h-screen flex-col">
