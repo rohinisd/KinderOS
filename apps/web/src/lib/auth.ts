@@ -186,7 +186,7 @@ export async function requireSuperAdmin(): Promise<{
   const user = await currentUser()
   if (!user) redirect('/sign-in')
 
-  const email = user.emailAddresses[0]?.emailAddress
+  const email = user.emailAddresses[0]?.emailAddress ?? ''
   if (!email || !isSuperAdminEmail(email)) {
     redirect('/no-access')
   }
@@ -194,7 +194,7 @@ export async function requireSuperAdmin(): Promise<{
   return {
     clerkUserId: user.id,
     email,
-    firstName: user.firstName ?? email.split('@')[0],
+    firstName: user.firstName ?? email.split('@')[0] ?? 'Admin',
   }
 }
 
