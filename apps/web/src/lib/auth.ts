@@ -48,8 +48,8 @@ function staffToAuthUser(staff: {
 }
 
 /**
- * Try to link a pre-created Staff record (invited by owner) to this Clerk user.
- * Matches by email where clerkUserId is null (not yet claimed).
+ * Try to link a pre-created Staff record (invited by owner/super admin)
+ * to this Clerk user. Matches by email where clerkUserId is null.
  */
 async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
   try {
@@ -77,80 +77,6 @@ async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
   }
 }
 
-/**
- * Auto-provision a new School + Owner for the VERY FIRST user only.
- * After the first school exists, new users MUST be invited.
- */
-async function provisionFirstOwner(clerkUserId: string): Promise<AuthUser | null> {
-  const schoolCount = await prisma.school.count()
-  if (schoolCount > 0) return null
-
-  try {
-    const client = await clerkClient()
-    const clerkUser = await client.users.getUser(clerkUserId)
-
-    const email = clerkUser.emailAddresses[0]?.emailAddress ?? ''
-    const firstName = clerkUser.firstName || email.split('@')[0] || 'Owner'
-    const lastName = clerkUser.lastName || ''
-    const slug = `school-${Date.now().toString(36)}`
-
-    const result = await prisma.$transaction(async (tx) => {
-      const school = await tx.school.create({
-        data: {
-          clerkOrgId: clerkUserId,
-          name: `${firstName}'s School`,
-          slug,
-          logoUrl: clerkUser.imageUrl || null,
-        },
-      })
-
-      const staff = await tx.staff.create({
-        data: {
-          schoolId: school.id,
-          clerkUserId,
-          firstName,
-          lastName,
-          phone: clerkUser.phoneNumbers[0]?.phoneNumber ?? '',
-          email,
-          role: 'OWNER',
-          photoUrl: clerkUser.imageUrl || null,
-        },
-      })
-
-      return { school, staff }
-    })
-
-    console.log(`[auth] Provisioned school "${result.school.name}" for ${firstName}`)
-
-    return {
-      id: result.staff.id,
-      clerkUserId,
-      schoolId: result.school.id,
-      firstName,
-      lastName,
-      email,
-      phone: result.staff.phone,
-      role: 'OWNER',
-      school: {
-        id: result.school.id,
-        name: result.school.name,
-        slug: result.school.slug,
-        logoUrl: result.school.logoUrl,
-        brandColor: result.school.brandColor,
-        isActive: result.school.isActive,
-      },
-    }
-  } catch (e) {
-    console.error('[auth] provisionFirstOwner failed:', e)
-    const staff = await prisma.staff.findUnique({
-      where: { clerkUserId },
-      include: { school: true },
-    })
-    if (staff) return staffToAuthUser(staff, clerkUserId)
-    return null
-  }
-}
-
 // ─── Public helpers ───────────────────────────────────
 
 const provisioningMap = new Map<string, Promise<AuthUser | null>>()
@@ -161,8 +87,8 @@ const provisioningMap = new Map<string, Promise<AuthUser | null>>()
  *   - Not signed in
  *   - Signed in but no Staff record exists (not invited)
  *
- * Auto-provisions ONLY the very first user as Owner.
- * All subsequent users must be pre-invited by the owner.
+ * NO auto-provisioning. All users must be pre-created by
+ * the Super Admin (for owners) or by the school owner (for staff).
  */
 export async function getAuthUser(): Promise<AuthUser | null> {
   const { userId } = await auth()
@@ -178,12 +104,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     return provisioningMap.get(userId)!
   }
 
-  const promise = (async () => {
-    const linked = await linkStaffByEmail(userId)
-    if (linked) return linked
-    return provisionFirstOwner(userId)
-  })()
-
+  const promise = linkStaffByEmail(userId)
   provisioningMap.set(userId, promise)
   try {
     return await promise
@@ -238,6 +159,42 @@ export async function requireTeacher() {
     clerkOrgId: user.clerkUserId,
     userId: user.id,
     role: user.role,
+  }
+}
+
+// ─── Super Admin ──────────────────────────────────────
+
+const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean)
+
+export function isSuperAdminEmail(email: string): boolean {
+  return SUPER_ADMIN_EMAILS.includes(email.toLowerCase())
+}
+
+/**
+ * Require the current Clerk user to be a super admin.
+ * Super admins are identified by SUPER_ADMIN_EMAILS env var.
+ * They don't need a Staff record.
+ */
+export async function requireSuperAdmin(): Promise<{
+  clerkUserId: string
+  email: string
+  firstName: string
+}> {
+  const user = await currentUser()
+  if (!user) redirect('/sign-in')
+
+  const email = user.emailAddresses[0]?.emailAddress
+  if (!email || !isSuperAdminEmail(email)) {
+    redirect('/no-access')
+  }
+
+  return {
+    clerkUserId: user.id,
+    email,
+    firstName: user.firstName ?? email.split('@')[0],
   }
 }
 
