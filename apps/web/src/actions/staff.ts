@@ -7,15 +7,17 @@ import { z } from 'zod'
 import { ok, err, type ActionResult } from '@/lib/utils'
 import { normalizePhone } from '@kinderos/utils'
 
+const StaffAssignableRole = z.enum([
+  'PRINCIPAL', 'CLASS_TEACHER', 'SUBJECT_TEACHER',
+  'ADMIN', 'ACCOUNTANT', 'SUPPORT_STAFF', 'DRIVER',
+])
+
 const StaffSchema = z.object({
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
   phone: z.string().min(10),
   email: z.string().email().optional().or(z.literal('')),
-  role: z.enum([
-    'OWNER', 'PRINCIPAL', 'CLASS_TEACHER', 'SUBJECT_TEACHER',
-    'ADMIN', 'ACCOUNTANT', 'SUPPORT_STAFF', 'DRIVER',
-  ]),
+  role: StaffAssignableRole,
   designation: z.string().optional(),
   department: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).default('OTHER'),
@@ -35,7 +37,7 @@ export async function createStaff(
         firstName: data.firstName,
         lastName: data.lastName,
         phone: normalizePhone(data.phone),
-        email: data.email || null,
+        email: data.email ? data.email.toLowerCase() : null,
         role: data.role,
         designation: data.designation,
         department: data.department,
@@ -52,6 +54,10 @@ export async function createStaff(
   }
 }
 
+const UpdateStaffSchema = StaffSchema.partial().extend({
+  role: StaffAssignableRole.optional(),
+})
+
 export async function updateStaff(
   id: string,
   input: Partial<z.infer<typeof StaffSchema>>
@@ -62,14 +68,35 @@ export async function updateStaff(
     const existing = await prisma.staff.findFirst({ where: { id, schoolId } })
     if (!existing) return err('Staff not found')
 
+    const parsed = UpdateStaffSchema.partial().safeParse(input)
+    if (!parsed.success) return err(parsed.error.issues.map((e) => e.message).join(', '))
+
+    if (existing.role === 'OWNER') {
+      if (input.role !== undefined) {
+        return err('School owner role cannot be changed from staff management')
+      }
+      if (parsed.data.email !== undefined && parsed.data.email) {
+        const email = parsed.data.email.toLowerCase()
+        const taken = await prisma.staff.findFirst({
+          where: {
+            email,
+            role: 'OWNER',
+            deletedAt: null,
+            NOT: { id: existing.id },
+          },
+        })
+        if (taken) return err('This email is already used as owner of another school')
+      }
+    }
+
     const staff = await prisma.staff.update({
       where: { id },
       data: {
         ...(input.firstName && { firstName: input.firstName }),
         ...(input.lastName && { lastName: input.lastName }),
         ...(input.phone && { phone: normalizePhone(input.phone) }),
-        ...(input.email !== undefined && { email: input.email || null }),
-        ...(input.role && { role: input.role }),
+        ...(input.email !== undefined && { email: input.email ? input.email.toLowerCase() : null }),
+        ...(input.role && existing.role !== 'OWNER' ? { role: input.role } : {}),
         ...(input.designation !== undefined && { designation: input.designation }),
         ...(input.department !== undefined && { department: input.department }),
         ...(input.gender && { gender: input.gender }),
@@ -93,6 +120,7 @@ export async function deleteStaff(
 
     const existing = await prisma.staff.findFirst({ where: { id, schoolId } })
     if (!existing) return err('Staff not found')
+    if (existing.role === 'OWNER') return err('Cannot remove the school owner')
 
     await prisma.staff.update({
       where: { id },

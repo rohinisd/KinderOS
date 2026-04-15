@@ -33,6 +33,15 @@ export async function updateSchoolSettings(
       data,
     })
 
+    const s = await prisma.school.findUnique({
+      where: { id: schoolId },
+      select: { slug: true },
+    })
+    if (s?.slug) {
+      revalidatePath(`/${s.slug}`)
+      revalidatePath(`/${s.slug}/admissions`)
+      revalidatePath(`/${s.slug}/blog`)
+    }
     revalidatePath('/dashboard/settings')
     revalidatePath('/dashboard/customize')
     return ok({ success: true })

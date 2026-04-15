@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { SpotlightStatus } from '@kinderos/db'
 
 export default async function SchoolPublicPage({
   params,
@@ -21,6 +22,11 @@ export default async function SchoolPublicPage({
         orderBy: { eventDate: 'desc' },
         take: 4,
         include: { photos: { take: 1 } },
+      },
+      spotlights: {
+        where: { status: SpotlightStatus.LIVE },
+        orderBy: { sortOrder: 'asc' },
+        select: { id: true, title: true, body: true, imageUrl: true, videoUrl: true },
       },
     },
   })
@@ -48,14 +54,53 @@ export default async function SchoolPublicPage({
           {school.tagline && (
             <p className="mt-3 text-xl text-white/80">{school.tagline}</p>
           )}
-          <Link
-            href={`/${schoolSlug}/admissions`}
-            className="mt-8 inline-block rounded-lg bg-white px-8 py-3 font-semibold text-gray-900 shadow-lg transition hover:bg-white/90"
-          >
-            Apply for Admission
-          </Link>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href={`/${schoolSlug}/admissions`}
+              className="inline-block rounded-lg bg-white px-8 py-3 font-semibold text-gray-900 shadow-lg transition hover:bg-white/90"
+            >
+              Apply for Admission
+            </Link>
+            <Link
+              href={`/${schoolSlug}/blog`}
+              className="inline-block rounded-lg border-2 border-white/80 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition hover:bg-white/20"
+            >
+              Blog
+            </Link>
+          </div>
         </div>
       </section>
+
+      {school.spotlights.length > 0 && (
+        <section className="border-t bg-white px-6 py-16">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="text-center text-3xl font-bold">Why families choose us</h2>
+            <div className="mt-10 grid gap-8 md:grid-cols-2">
+              {school.spotlights.map((s) => (
+                <article
+                  key={s.id}
+                  className="overflow-hidden rounded-2xl border bg-gray-50/80 shadow-sm"
+                >
+                  {s.imageUrl && (
+                    <img src={s.imageUrl} alt="" className="aspect-video w-full object-cover" />
+                  )}
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold">{s.title}</h3>
+                    <p className="mt-3 whitespace-pre-wrap text-muted-foreground">{s.body}</p>
+                    {s.videoUrl && (
+                      <p className="mt-3 text-sm">
+                        <a href={s.videoUrl} className="font-medium text-brand-600 underline" target="_blank" rel="noopener noreferrer">
+                          Watch video
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* About */}
       {school.description && (

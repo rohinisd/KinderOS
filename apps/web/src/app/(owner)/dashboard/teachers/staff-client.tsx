@@ -39,7 +39,7 @@ type StaffMember = {
   classesAsTeacher: { id: string; name: string }[]
 }
 
-const ROLES = [
+const ALL_ROLES = [
   { value: 'OWNER', label: 'Owner' },
   { value: 'PRINCIPAL', label: 'Principal' },
   { value: 'CLASS_TEACHER', label: 'Class Teacher' },
@@ -49,6 +49,18 @@ const ROLES = [
   { value: 'SUPPORT_STAFF', label: 'Support Staff' },
   { value: 'DRIVER', label: 'Driver' },
 ]
+
+/** Owner is provisioned by platform admin only — never assign via this form. */
+const ASSIGNABLE_ROLES = ALL_ROLES.filter((r) => r.value !== 'OWNER')
+
+type StaffAssignableRole =
+  | 'PRINCIPAL'
+  | 'CLASS_TEACHER'
+  | 'SUBJECT_TEACHER'
+  | 'ADMIN'
+  | 'ACCOUNTANT'
+  | 'SUPPORT_STAFF'
+  | 'DRIVER'
 
 const roleColors: Record<string, 'default' | 'secondary' | 'info' | 'warning' | 'success'> = {
   OWNER: 'default',
@@ -83,16 +95,23 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
 
     startTransition(async () => {
       if (editing) {
-        const result = await updateStaff(editing.id, {
+        const base = {
           firstName: form.get('firstName') as string,
           lastName: form.get('lastName') as string,
           phone: form.get('phone') as string,
           email: (form.get('email') as string) || undefined,
-          role: form.get('role') as 'OWNER' | 'PRINCIPAL' | 'CLASS_TEACHER' | 'SUBJECT_TEACHER' | 'ADMIN' | 'ACCOUNTANT' | 'SUPPORT_STAFF' | 'DRIVER',
           designation: (form.get('designation') as string) || undefined,
           department: (form.get('department') as string) || undefined,
           gender: form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER',
-        })
+        }
+        const payload =
+          editing.role === 'OWNER'
+            ? base
+            : {
+                ...base,
+                role: form.get('role') as StaffAssignableRole,
+              }
+        const result = await updateStaff(editing.id, payload)
         if (result.success) {
           toast.success('Staff updated')
           setSheetOpen(false)
@@ -105,7 +124,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
           lastName: form.get('lastName') as string,
           phone: form.get('phone') as string,
           email: (form.get('email') as string) || undefined,
-          role: form.get('role') as 'OWNER' | 'PRINCIPAL' | 'CLASS_TEACHER' | 'SUBJECT_TEACHER' | 'ADMIN' | 'ACCOUNTANT' | 'SUPPORT_STAFF' | 'DRIVER',
+          role: form.get('role') as StaffAssignableRole,
           designation: (form.get('designation') as string) || undefined,
           department: (form.get('department') as string) || undefined,
           gender: (form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER') || 'OTHER',
@@ -152,7 +171,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              {ROLES.map((r) => (
+              {ALL_ROLES.map((r) => (
                 <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
               ))}
             </SelectContent>
@@ -199,7 +218,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
                   </TableCell>
                   <TableCell>
                     <Badge variant={roleColors[s.role] ?? 'secondary'}>
-                      {ROLES.find((r) => r.value === s.role)?.label ?? s.role}
+                      {ALL_ROLES.find((r) => r.value === s.role)?.label ?? s.role}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -228,9 +247,11 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
                         <DropdownMenuItem onClick={() => { setEditing(s); setSheetOpen(true) }}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(s.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Remove
-                        </DropdownMenuItem>
+                        {s.role !== 'OWNER' && (
+                          <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(s.id)}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Remove
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -261,14 +282,20 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
 
             <div className="space-y-1.5">
               <Label htmlFor="role">Role *</Label>
-              <Select name="role" defaultValue={editing?.role ?? 'CLASS_TEACHER'}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {editing?.role === 'OWNER' ? (
+                <p className="rounded-md border bg-muted/50 px-3 py-2 text-sm">
+                  School owner (assigned when the school was created on the platform). Role cannot be changed here.
+                </p>
+              ) : (
+                <Select name="role" defaultValue={editing?.role ?? 'CLASS_TEACHER'}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ASSIGNABLE_ROLES.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">

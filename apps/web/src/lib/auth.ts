@@ -138,6 +138,25 @@ export async function requireSchoolAuth() {
   }
 }
 
+const MARKETING_EDITOR_ROLES = ['OWNER', 'PRINCIPAL', 'ADMIN'] as const
+
+export function isMarketingEditorRole(role: string): boolean {
+  return (MARKETING_EDITOR_ROLES as readonly string[]).includes(role)
+}
+
+/** Owner, principal, or school admin — public site copy, USPs, blog (not accountant/driver). */
+export async function requireMarketingEditor() {
+  const user = await requireAuth()
+  if (!isMarketingEditorRole(user.role)) redirect('/no-access')
+  return {
+    schoolId: user.school.id,
+    clerkOrgId: user.clerkUserId,
+    staffId: user.id,
+    role: user.role,
+    schoolSlug: user.school.slug,
+  }
+}
+
 export async function requireOwner() {
   const user = await requireAuth()
   if (user.role !== 'OWNER') redirect('/no-access')
@@ -146,6 +165,7 @@ export async function requireOwner() {
     clerkOrgId: user.clerkUserId,
     userId: user.id,
     role: user.role,
+    schoolSlug: user.school.slug,
   }
 }
 

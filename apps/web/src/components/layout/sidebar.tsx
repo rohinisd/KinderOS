@@ -21,6 +21,7 @@ import {
   Building2,
   CreditCard,
   ToggleLeft,
+  Globe,
 } from 'lucide-react'
 
 type Portal = 'owner' | 'teacher' | 'admin' | 'superadmin'
@@ -35,6 +36,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Admissions', href: '/dashboard/admissions', icon: UserPlus },
     { label: 'Announcements', href: '/dashboard/announcements', icon: Megaphone },
     { label: 'Customize', href: '/dashboard/customize', icon: Palette },
+    { label: 'School website', href: '/office/website', icon: Globe },
     { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
     { label: 'Settings', href: '/dashboard/settings', icon: Settings },
   ],
@@ -53,6 +55,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Attendance', href: '/office/attendance', icon: CalendarCheck },
     { label: 'Admissions', href: '/office/admissions', icon: UserPlus },
     { label: 'Announcements', href: '/office/announcements', icon: Megaphone },
+    { label: 'School website', href: '/office/website', icon: Globe },
   ],
   superadmin: [
     { label: 'Schools', href: '/admin/tenants', icon: Building2 },
@@ -82,6 +85,7 @@ export function Sidebar({ portal }: { portal: Portal }) {
             pathname === item.href ||
             (item.href !== '/dashboard' &&
               item.href !== '/classroom' &&
+              item.href !== '/office/website' &&
               pathname.startsWith(item.href))
 
           return (

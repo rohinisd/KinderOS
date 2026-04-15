@@ -70,6 +70,7 @@ model School {
   classes      Class[]
   announcements Announcement[]
   blogPosts    BlogPost[]
+  spotlights   SchoolSpotlight[]
   feeInvoices  FeeInvoice[]
   feePlans     FeePlan[]
   payments     Payment[]
@@ -270,6 +271,8 @@ model Staff {
   assignments Assignment[]
   progressReports ProgressReport[]
   leaves      LeaveRequest[]
+  createdSpotlights  SchoolSpotlight[] @relation("SchoolSpotlightCreator")
+  reviewedSpotlights SchoolSpotlight[] @relation("SchoolSpotlightReviewer")
 
   @@index([schoolId])
   @@map("staff")
@@ -604,6 +607,40 @@ enum ContentStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+// ─── Public landing USPs (staff draft → owner publishes) ─────────────
+
+enum SpotlightStatus {
+  DRAFT
+  PENDING
+  LIVE
+  REJECTED
+}
+
+model SchoolSpotlight {
+  id             String           @id @default(cuid())
+  schoolId       String
+  title          String
+  body           String           @db.Text
+  imageUrl       String?          @db.Text
+  videoUrl       String?
+  sortOrder      Int              @default(0)
+  status         SpotlightStatus  @default(DRAFT)
+  rejectNote     String?          @db.Text
+  reviewedAt     DateTime?
+  reviewedById   String?
+  createdById    String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  school     School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdBy  Staff  @relation("SchoolSpotlightCreator", fields: [createdById], references: [id])
+  reviewedBy Staff? @relation("SchoolSpotlightReviewer", fields: [reviewedById], references: [id])
+
+  @@index([schoolId, status])
+  @@index([schoolId, status, sortOrder])
+  @@map("school_spotlights")
 }
 
 model BlogPost {

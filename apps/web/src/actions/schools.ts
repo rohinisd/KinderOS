@@ -55,6 +55,13 @@ export async function createSchool(
         },
       })
 
+      const ownerCount = await tx.staff.count({
+        where: { schoolId: school.id, role: 'OWNER', deletedAt: null },
+      })
+      if (ownerCount !== 1) {
+        throw new Error('Invariant: school must have exactly one owner')
+      }
+
       return school
     })
 
