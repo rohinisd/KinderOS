@@ -1,15 +1,18 @@
 import Link from 'next/link'
 import { SignOutButton } from '@clerk/nextjs'
+import { cn } from '@/lib/utils'
+import { badgeForSchoolRole, PLATFORM_OWNER_BADGE } from '@/lib/portal-badges'
 
 const ROLE_PORTAL: Record<string, { href: string; label: string }> = {
   OWNER: { href: '/dashboard', label: 'Owner dashboard' },
-  PRINCIPAL: { href: '/dashboard', label: 'Owner dashboard' },
+  /** Principal cannot use owner-only `/dashboard` layout — send to office. */
+  PRINCIPAL: { href: '/office/students', label: 'Staff office' },
   CLASS_TEACHER: { href: '/classroom', label: 'Classroom' },
   SUBJECT_TEACHER: { href: '/classroom', label: 'Classroom' },
-  ADMIN: { href: '/office/students', label: 'Office' },
-  ACCOUNTANT: { href: '/office/fees', label: 'Office' },
-  SUPPORT_STAFF: { href: '/office/fees', label: 'Office' },
-  DRIVER: { href: '/office/fees', label: 'Office' },
+  ADMIN: { href: '/office/students', label: 'Staff office' },
+  ACCOUNTANT: { href: '/office/fees', label: 'Staff office' },
+  SUPPORT_STAFF: { href: '/office/fees', label: 'Staff office' },
+  DRIVER: { href: '/office/fees', label: 'Staff office' },
 }
 
 export function HomeAuthBanner({
@@ -24,29 +27,45 @@ export function HomeAuthBanner({
   isSuperAdmin: boolean
 }) {
   const portal = role ? ROLE_PORTAL[role] : null
+  const roleBadge = badgeForSchoolRole(role)
+  const superBadge = isSuperAdmin && !role ? PLATFORM_OWNER_BADGE : null
+  const headerBadge = roleBadge ?? superBadge
 
   return (
     <div className="border-b border-brand-700 bg-brand-600 px-4 py-2.5 text-sm text-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
-        <span className="text-white/90">
-          {staffFirstName ? (
-            <>
-              Signed in as <strong className="font-semibold text-white">{staffFirstName}</strong>
-              {schoolName && (
-                <>
-                  {' '}
-                  at <strong className="font-semibold text-white">{schoolName}</strong>
-                </>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="text-white/90">
+            {staffFirstName ? (
+              <>
+                Signed in as <strong className="font-semibold text-white">{staffFirstName}</strong>
+                {schoolName && (
+                  <>
+                    {' '}
+                    at <strong className="font-semibold text-white">{schoolName}</strong>
+                  </>
+                )}
+              </>
+            ) : isSuperAdmin ? (
+              <>
+                Signed in as <strong className="font-semibold text-white">platform admin</strong>
+              </>
+            ) : (
+              <>Your account is not linked to a school yet.</>
+            )}
+          </span>
+          {headerBadge && (
+            <span
+              title={headerBadge.hint}
+              className={cn(
+                'shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide shadow-sm',
+                headerBadge.className
               )}
-            </>
-          ) : isSuperAdmin ? (
-            <>
-              Signed in as <strong className="font-semibold text-white">platform admin</strong>
-            </>
-          ) : (
-            <>Your account is not linked to a school yet.</>
+            >
+              {headerBadge.label}
+            </span>
           )}
-        </span>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {isSuperAdmin && (
             <Link

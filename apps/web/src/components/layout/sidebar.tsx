@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import type { OfficePortalVariant } from '@/lib/portal-variants'
 import {
   LayoutDashboard,
   Users,
@@ -25,6 +26,48 @@ import {
 } from 'lucide-react'
 
 type Portal = 'owner' | 'teacher' | 'admin' | 'superadmin'
+
+const PORTAL_RIBBON: Record<
+  Exclude<Portal, 'admin'>,
+  { title: string; subtitle: string; box: string; kicker: string }
+> = {
+  owner: {
+    title: 'Owner portal',
+    subtitle: 'Fees, staff, branding & analytics',
+    box: 'border-brand-200 bg-brand-50',
+    kicker: 'text-brand-800',
+  },
+  teacher: {
+    title: 'Classroom portal',
+    subtitle: 'Your classes, attendance & parents',
+    box: 'border-amber-200 bg-amber-50',
+    kicker: 'text-amber-950',
+  },
+  superadmin: {
+    title: 'Platform owner',
+    subtitle: 'Schools, billing & feature flags',
+    box: 'border-violet-200 bg-violet-50',
+    kicker: 'text-violet-900',
+  },
+}
+
+const OFFICE_RIBBON: Record<
+  OfficePortalVariant,
+  { title: string; subtitle: string; box: string; kicker: string }
+> = {
+  staff: {
+    title: 'Staff portal',
+    subtitle: 'Students, fees, attendance & day-to-day',
+    box: 'border-teal-200 bg-teal-50',
+    kicker: 'text-teal-900',
+  },
+  admin: {
+    title: 'Admin portal',
+    subtitle: 'School-wide administration & office oversight',
+    box: 'border-slate-200 bg-slate-50',
+    kicker: 'text-slate-900',
+  },
+}
 
 const navItems: Record<Portal, { label: string; href: string; icon: React.ElementType }[]> = {
   owner: [
@@ -64,22 +107,48 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
   ],
 }
 
-export function Sidebar({ portal }: { portal: Portal }) {
+export function Sidebar({
+  portal,
+  officeVariant = 'staff',
+}: {
+  portal: Portal
+  /** On `/office`: `ADMIN` role → admin styling; else staff. Ignored for other portals. */
+  officeVariant?: OfficePortalVariant
+}) {
   const pathname = usePathname()
   const items = navItems[portal]
+
+  const ribbon =
+    portal === 'admin'
+      ? OFFICE_RIBBON[officeVariant]
+      : PORTAL_RIBBON[portal]
 
   return (
     <aside className="hidden w-64 flex-shrink-0 border-r bg-white lg:block">
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">
+          <div
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white',
+              portal === 'admin' && officeVariant === 'admin' && 'bg-slate-700',
+              portal === 'admin' && officeVariant === 'staff' && 'bg-teal-600',
+              portal === 'teacher' && 'bg-amber-600',
+              portal === 'superadmin' && 'bg-violet-600',
+              portal === 'owner' && 'bg-brand-500'
+            )}
+          >
             K
           </div>
           <span className="text-lg font-semibold">KinderOS</span>
         </Link>
       </div>
 
-      <nav className="mt-4 space-y-1 px-3">
+      <div className={cn('mx-3 mt-3 rounded-lg border px-3 py-2.5', ribbon.box)}>
+        <p className={cn('text-xs font-semibold', ribbon.kicker)}>{ribbon.title}</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-gray-600">{ribbon.subtitle}</p>
+      </div>
+
+      <nav className="mt-3 space-y-1 px-3">
         {items.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -95,7 +164,15 @@ export function Sidebar({ portal }: { portal: Portal }) {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-brand-50 text-brand-700'
+                  ? portal === 'admin'
+                    ? officeVariant === 'admin'
+                      ? 'bg-slate-200/80 text-slate-950'
+                      : 'bg-teal-50 text-teal-900'
+                    : portal === 'teacher'
+                      ? 'bg-amber-50 text-amber-950'
+                      : portal === 'superadmin'
+                        ? 'bg-violet-50 text-violet-900'
+                        : 'bg-brand-50 text-brand-700'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               )}
             >
