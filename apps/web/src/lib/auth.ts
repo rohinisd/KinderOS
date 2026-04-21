@@ -193,21 +193,67 @@ export function isSuperAdminEmail(email: string): boolean {
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase())
 }
 
+/** Collect every email on the Clerk user (primary is not always emailAddresses[0]). */
+function collectClerkUserEmails(user: {
+  id: string
+  emailAddresses: Array<{ emailAddress: string; id?: string }>
+  primaryEmailAddressId: string | null
+}): string[] {
+  const out = new Set<string>()
+  for (const a of user.emailAddresses) {
+    if (a.emailAddress) out.add(a.emailAddress.toLowerCase())
+  }
+  return [...out]
+}
+
 /**
- * True when the signed-in Clerk user’s primary email is listed in SUPER_ADMIN_EMAILS.
- * Platform admins do not need a Staff row.
+ * Platform admin if SUPER_ADMIN_EMAILS matches any Clerk email, or a row exists in
+ * `platform_admins` for this clerkUserId or email.
+ */
+async function isUserPlatformSuperAdmin(
+  clerkUserId: string,
+  emailsLower: string[]
+): Promise<boolean> {
+  for (const e of emailsLower) {
+    if (SUPER_ADMIN_EMAILS.includes(e)) return true
+  }
+  const byClerk = await prisma.platformAdmin.findUnique({ where: { clerkUserId } })
+  if (byClerk) return true
+  if (emailsLower.length === 0) return false
+  const byEmail = await prisma.platformAdmin.findFirst({
+    where: {
+      OR: emailsLower.map((email) => ({
+        email: { equals: email, mode: 'insensitive' as const },
+      })),
+    },
+  })
+  return !!byEmail
+}
+
+/**
+ * True when the signed-in Clerk user is a platform admin (env allowlist and/or DB).
+ * Does not require a Staff row.
  */
 export async function isPlatformSuperAdminSession(): Promise<boolean> {
   const user = await currentUser()
   if (!user) return false
-  const email = user.emailAddresses[0]?.emailAddress ?? ''
-  return isSuperAdminEmail(email)
+  const emails = collectClerkUserEmails(user)
+  return isUserPlatformSuperAdmin(user.id, emails)
+}
+
+/**
+ * Same as session check but for a Clerk user id (e.g. home page with auth() only).
+ */
+export async function isPlatformSuperAdminByClerkUserId(clerkUserId: string): Promise<boolean> {
+  const client = await clerkClient()
+  const user = await client.users.getUser(clerkUserId)
+  const emails = collectClerkUserEmails(user)
+  return isUserPlatformSuperAdmin(user.id, emails)
 }
 
 /**
  * Require the current Clerk user to be a super admin.
- * Super admins are identified by SUPER_ADMIN_EMAILS env var.
- * They don't need a Staff record.
+ * Identified by SUPER_ADMIN_EMAILS and/or PlatformAdmin table.
  */
 export async function requireSuperAdmin(): Promise<{
   clerkUserId: string
@@ -217,15 +263,21 @@ export async function requireSuperAdmin(): Promise<{
   const user = await currentUser()
   if (!user) redirect('/')
 
-  const email = user.emailAddresses[0]?.emailAddress ?? ''
-  if (!email || !isSuperAdminEmail(email)) {
+  const emails = collectClerkUserEmails(user)
+  if (!(await isUserPlatformSuperAdmin(user.id, emails))) {
     redirect('/no-access')
   }
 
+  const addrs = user.emailAddresses as Array<{ emailAddress: string; id: string }>
+  const primary =
+    addrs.find((a) => a.id === user.primaryEmailAddressId)?.emailAddress ??
+    addrs[0]?.emailAddress ??
+    ''
+
   return {
     clerkUserId: user.id,
-    email,
-    firstName: user.firstName ?? email.split('@')[0] ?? 'Admin',
+    email: primary,
+    firstName: user.firstName ?? primary.split('@')[0] ?? 'Admin',
   }
 }
 

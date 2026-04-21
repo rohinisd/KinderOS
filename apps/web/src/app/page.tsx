@@ -1,7 +1,6 @@
 import { headers } from 'next/headers'
 import { auth } from '@clerk/nextjs/server'
-import { clerkClient } from '@clerk/nextjs/server'
-import { isSuperAdminEmail } from '@/lib/auth'
+import { isPlatformSuperAdminByClerkUserId } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { normalizeHost, isPlatformHost } from '@/lib/platform-host'
 import { getSchoolLandingByHost } from '@/lib/school-from-host'
@@ -57,12 +56,7 @@ export default async function HomePage() {
       role = staff.role
     }
 
-    const client = await clerkClient()
-    const clerkUser = await client.users.getUser(userId)
-    const email = clerkUser.emailAddresses[0]?.emailAddress
-    if (email && isSuperAdminEmail(email)) {
-      isSuperAdmin = true
-    }
+    isSuperAdmin = await isPlatformSuperAdminByClerkUserId(userId)
   }
 
   return (
