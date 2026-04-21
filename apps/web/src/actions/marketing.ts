@@ -20,13 +20,18 @@ const UpdateSchoolMarketingSchema = z.object({
   accentColor: z.string().max(32).optional(),
   heroImageUrl: z.string().max(2000).optional().nullable().or(z.literal('')),
   logoUrl: z.string().max(2000).optional().nullable().or(z.literal('')),
+  /** Hostname only, e.g. school.edu.in — owner-only; add same host in Vercel → Domains. */
+  customDomain: z.string().max(200).optional().nullable().or(z.literal('')),
 })
+
+const DOMAIN_HOST =
+  /^(?:localhost|127\.0\.0\.1|[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+)$/i
 
 export async function updateSchoolMarketing(
   input: z.infer<typeof UpdateSchoolMarketingSchema>
 ): Promise<ActionResult<{ success: boolean }>> {
   try {
-    const { schoolId, schoolSlug } = await requireMarketingEditor()
+    const { schoolId, schoolSlug, role } = await requireMarketingEditor()
     const data = UpdateSchoolMarketingSchema.parse(input)
 
     const payload: Record<string, unknown> = {}
@@ -48,6 +53,27 @@ export async function updateSchoolMarketing(
       payload.logoUrl = data.logoUrl === '' ? null : data.logoUrl
     }
 
+    if (data.customDomain !== undefined) {
+      if (role !== 'OWNER') {
+        return err('Only the school owner can set a custom domain')
+      }
+      const raw = data.customDomain?.trim() ?? ''
+      const domain = raw === '' ? null : raw.toLowerCase().replace(/^https?:\/\//, '').split('/')[0] ?? null
+      if (domain && !DOMAIN_HOST.test(domain)) {
+        return err('Enter a valid domain (e.g. school.edu.in) without paths or https://')
+      }
+      if (domain) {
+        const taken = await prisma.school.findFirst({
+          where: {
+            customDomain: domain,
+            NOT: { id: schoolId },
+          },
+        })
+        if (taken) return err('This domain is already assigned to another school')
+      }
+      payload.customDomain = domain
+    }
+
     await prisma.school.update({
       where: { id: schoolId },
       data: payload,
@@ -59,6 +85,7 @@ export async function updateSchoolMarketing(
     revalidatePath('/office/website')
     revalidatePath('/dashboard/customize')
     revalidatePath('/dashboard/settings')
+    revalidatePath('/')
     return ok({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {

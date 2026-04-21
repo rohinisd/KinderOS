@@ -50,6 +50,7 @@ type SchoolPayload = {
   accentColor: string
   heroImageUrl: string | null
   logoUrl: string | null
+  customDomain: string | null
 }
 
 type SpotlightRow = {
@@ -114,6 +115,10 @@ export function WebsiteClient({
   const [rejectNote, setRejectNote] = useState('')
 
   const publicUrl = useMemo(() => `/${school.slug}`, [school.slug])
+  const customBase = useMemo(
+    () => (school.customDomain ? `https://${school.customDomain}` : null),
+    [school.customDomain]
+  )
 
   function openSpotlight(s: SpotlightRow | 'new') {
     setSpotSheet(s)
@@ -167,6 +172,7 @@ export function WebsiteClient({
         accentColor: (form.get('accentColor') as string) || undefined,
         heroImageUrl: (form.get('heroImageUrl') as string) || '',
         logoUrl: (form.get('logoUrl') as string) || '',
+        ...(isOwner ? { customDomain: (form.get('customDomain') as string) || '' } : {}),
       })
       if (result.success) toast.success('Public site details saved')
       else toast.error(result.error)
@@ -206,15 +212,29 @@ export function WebsiteClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
         <Button variant="outline" size="sm" asChild>
           <Link href={publicUrl} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="mr-2 h-4 w-4" />
             View public page
           </Link>
         </Button>
+        {customBase && (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={customBase} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open custom domain
+            </Link>
+          </Button>
+        )}
         <span className="text-sm text-muted-foreground">
-          Families visit <span className="font-mono text-foreground">{publicUrl}</span> (no login required).
+          Path URL: <span className="font-mono text-foreground">{publicUrl}</span>
+          {customBase && (
+            <>
+              {' '}
+              · Custom: <span className="font-mono text-foreground">{customBase}</span>
+            </>
+          )}
         </span>
       </div>
 
@@ -293,6 +313,21 @@ export function WebsiteClient({
                     <Label htmlFor="heroImageUrl">Hero background image URL</Label>
                     <Input id="heroImageUrl" name="heroImageUrl" placeholder="https://..." defaultValue={school.heroImageUrl ?? ''} />
                   </div>
+                  {isOwner && (
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="customDomain">Custom domain (optional)</Label>
+                      <Input
+                        id="customDomain"
+                        name="customDomain"
+                        placeholder="e.g. school.edu.in"
+                        defaultValue={school.customDomain ?? ''}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Add this exact hostname in Vercel → Domains, point DNS to Vercel, then save here. Families can use your domain without{' '}
+                        <span className="font-mono">/{school.slug}</span> in the URL.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <Button type="submit" disabled={isPending}>Save</Button>
               </form>

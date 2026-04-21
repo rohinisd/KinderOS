@@ -1,7 +1,10 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import { isPlatformHost, normalizeHost } from '@/lib/platform-host'
+import { getSchoolSlugByCustomHost } from '@/lib/school-from-host'
+import { RESERVED_SCHOOL_SLUGS } from '@/lib/reserved-slugs'
 
-/** App routes at the first URL segment — not school public marketing pages. */
+/** App routes at the first URL segment — not school public marketing pages (path-based). */
 const RESERVED_ROOT_SEGMENTS = new Set([
   'sign-in',
   'sign-up',
@@ -20,7 +23,7 @@ function isPublicSchoolMarketingPath(pathname: string): boolean {
   if (segments.length === 0) return false
   const first = segments[0]
   if (!first || RESERVED_ROOT_SEGMENTS.has(first)) return false
-  // Match school slugs (same rule as super-admin create form)
+  if (RESERVED_SCHOOL_SLUGS.has(first)) return false
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(first)) return false
   if (segments.length === 1) return true
   if (segments.length === 2 && segments[1] === 'admissions') return true
@@ -41,7 +44,23 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, request) => {
-  const pathname = new URL(request.url).pathname
+  const url = new URL(request.url)
+  const pathname = url.pathname
+  const host = normalizeHost(request.headers.get('host') ?? '')
+
+  // Custom domain on Vercel: /admissions and /blog map to /[slug]/...
+  if (!isPlatformHost(host)) {
+    const slug = await getSchoolSlugByCustomHost(host)
+    if (slug) {
+      if (pathname === '/admissions') {
+        return NextResponse.rewrite(new URL(`/${slug}/admissions`, request.url))
+      }
+      if (pathname === '/blog' || pathname.startsWith('/blog/')) {
+        return NextResponse.rewrite(new URL(`/${slug}${pathname}`, request.url))
+      }
+    }
+  }
+
   if (isPublicSchoolMarketingPath(pathname)) return NextResponse.next()
   if (isPublicRoute(request)) return NextResponse.next()
 

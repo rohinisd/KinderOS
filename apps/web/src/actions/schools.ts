@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { ok, err, type ActionResult } from '@/lib/utils'
 import { normalizePhone } from '@kinderos/utils'
+import { isReservedSchoolSlug } from '@/lib/reserved-slugs'
 
 const CreateSchoolSchema = z.object({
   name: z.string().min(1).max(200),
@@ -24,6 +25,10 @@ export async function createSchool(
   try {
     await requireSuperAdmin()
     const data = CreateSchoolSchema.parse(input)
+
+    if (isReservedSchoolSlug(data.slug)) {
+      return err('This slug is reserved for the platform. Choose another.')
+    }
 
     const existingSlug = await prisma.school.findUnique({ where: { slug: data.slug } })
     if (existingSlug) return err('A school with this slug already exists')

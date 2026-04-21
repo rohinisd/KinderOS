@@ -78,6 +78,7 @@ export default async function OfficeWebsitePage() {
             accentColor: school.accentColor,
             heroImageUrl: school.heroImageUrl,
             logoUrl: school.logoUrl,
+            customDomain: school.customDomain,
           }}
           spotlights={spotlights}
           blogPosts={posts}

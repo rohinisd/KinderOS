@@ -1,5 +1,5 @@
 import { TopBar } from '@/components/layout/topbar'
-import { getAuthUser } from '@/lib/auth'
+import { getAuthUser, isPlatformSuperAdminSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +10,10 @@ export default async function ParentLayout({
   children: React.ReactNode
 }) {
   const user = await getAuthUser()
-  if (!user) redirect('/no-access')
+  if (!user) {
+    if (await isPlatformSuperAdminSession()) redirect('/admin/tenants')
+    redirect('/no-access')
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

@@ -1,8 +1,16 @@
 import Link from 'next/link'
 import { SignOutButton } from '@clerk/nextjs'
 import { ShieldX } from 'lucide-react'
+import { redirect } from 'next/navigation'
+import { isPlatformSuperAdminSession } from '@/lib/auth'
 
-export default function NoAccessPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function NoAccessPage() {
+  if (await isPlatformSuperAdminSession()) {
+    redirect('/admin/tenants')
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-6">
       <div className="mx-auto max-w-md text-center">

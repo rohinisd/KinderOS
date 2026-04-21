@@ -194,6 +194,17 @@ export function isSuperAdminEmail(email: string): boolean {
 }
 
 /**
+ * True when the signed-in Clerk user’s primary email is listed in SUPER_ADMIN_EMAILS.
+ * Platform admins do not need a Staff row.
+ */
+export async function isPlatformSuperAdminSession(): Promise<boolean> {
+  const user = await currentUser()
+  if (!user) return false
+  const email = user.emailAddresses[0]?.emailAddress ?? ''
+  return isSuperAdminEmail(email)
+}
+
+/**
  * Require the current Clerk user to be a super admin.
  * Super admins are identified by SUPER_ADMIN_EMAILS env var.
  * They don't need a Staff record.
@@ -204,7 +215,7 @@ export async function requireSuperAdmin(): Promise<{
   firstName: string
 }> {
   const user = await currentUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/')
 
   const email = user.emailAddresses[0]?.emailAddress ?? ''
   if (!email || !isSuperAdminEmail(email)) {
