@@ -207,6 +207,22 @@ function collectClerkUserEmails(user: {
 }
 
 /**
+ * Optional override in Clerk Dashboard → user → Public or Private metadata:
+ * `{ "platformAdmin": true }` (or `platform_admin`) so production access works
+ * without relying on `SUPER_ADMIN_EMAILS` or DB rows.
+ */
+function isClerkMetadataPlatformAdmin(user: {
+  publicMetadata?: Record<string, unknown> | null
+  privateMetadata?: Record<string, unknown> | null
+}): boolean {
+  const flag = (m: Record<string, unknown> | null | undefined) => {
+    if (!m || typeof m !== 'object') return false
+    return m.platformAdmin === true || m.platform_admin === true
+  }
+  return flag(user.publicMetadata as Record<string, unknown>) || flag(user.privateMetadata as Record<string, unknown>)
+}
+
+/**
  * Platform admin if SUPER_ADMIN_EMAILS matches any Clerk email, or a row exists in
  * `platform_admins` for this clerkUserId or email.
  */
@@ -230,25 +246,40 @@ async function isUserPlatformSuperAdmin(
   return !!byEmail
 }
 
+async function loadClerkUserPlatformAdmin(clerkUserId: string): Promise<{
+  isAdmin: boolean
+  user: Awaited<ReturnType<Awaited<ReturnType<typeof clerkClient>>['users']['getUser']>>
+}> {
+  const client = await clerkClient()
+  const user = await client.users.getUser(clerkUserId)
+  if (isClerkMetadataPlatformAdmin(user)) {
+    return { isAdmin: true, user }
+  }
+  const emails = collectClerkUserEmails(user)
+  const isAdmin = await isUserPlatformSuperAdmin(user.id, emails)
+  return { isAdmin, user }
+}
+
 /**
  * True when the signed-in Clerk user is a platform admin (env allowlist and/or DB).
  * Does not require a Staff row.
+ *
+ * Uses `auth().userId` + Backend API (not `currentUser()`), which is reliable when
+ * `currentUser()` is null but the session is valid — a common cause of false "No Access".
  */
 export async function isPlatformSuperAdminSession(): Promise<boolean> {
-  const user = await currentUser()
-  if (!user) return false
-  const emails = collectClerkUserEmails(user)
-  return isUserPlatformSuperAdmin(user.id, emails)
+  const { userId } = await auth()
+  if (!userId) return false
+  const { isAdmin } = await loadClerkUserPlatformAdmin(userId)
+  return isAdmin
 }
 
 /**
  * Same as session check but for a Clerk user id (e.g. home page with auth() only).
  */
 export async function isPlatformSuperAdminByClerkUserId(clerkUserId: string): Promise<boolean> {
-  const client = await clerkClient()
-  const user = await client.users.getUser(clerkUserId)
-  const emails = collectClerkUserEmails(user)
-  return isUserPlatformSuperAdmin(user.id, emails)
+  const { isAdmin } = await loadClerkUserPlatformAdmin(clerkUserId)
+  return isAdmin
 }
 
 /**
@@ -260,13 +291,11 @@ export async function requireSuperAdmin(): Promise<{
   email: string
   firstName: string
 }> {
-  const user = await currentUser()
-  if (!user) redirect('/')
+  const { userId } = await auth()
+  if (!userId) redirect('/')
 
-  const emails = collectClerkUserEmails(user)
-  if (!(await isUserPlatformSuperAdmin(user.id, emails))) {
-    redirect('/no-access')
-  }
+  const { isAdmin, user } = await loadClerkUserPlatformAdmin(userId)
+  if (!isAdmin) redirect('/no-access')
 
   const addrs = user.emailAddresses as Array<{ emailAddress: string; id: string }>
   const primary =
