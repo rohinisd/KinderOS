@@ -1,32 +1,47 @@
 import { prisma } from '@/lib/prisma'
+import { requireSuperAdmin } from '@/lib/auth'
 import { PageHeader } from '@/components/layout/page-header'
+import { DEFAULT_FEATURE_FLAG_DEFINITIONS } from '@/lib/default-feature-flags'
+import { FeatureFlagsClient, type FlagRow } from './feature-flags-client'
 
 export const dynamic = 'force-dynamic'
 
 export default async function FeatureFlagsPage() {
-  const flags = await prisma.featureFlag.findMany({ orderBy: { key: 'asc' } })
+  await requireSuperAdmin()
+
+  for (const def of DEFAULT_FEATURE_FLAG_DEFINITIONS) {
+    await prisma.featureFlag.upsert({
+      where: { key: def.key },
+      create: { key: def.key, isEnabled: false, schoolIds: [] },
+      update: {},
+    })
+  }
+
+  const [flags, schools] = await Promise.all([
+    prisma.featureFlag.findMany({ orderBy: { key: 'asc' } }),
+    prisma.school.findMany({
+      where: { deletedAt: null },
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: 'asc' },
+    }),
+  ])
+
+  const rows: FlagRow[] = flags.map((f) => ({
+    id: f.id,
+    key: f.key,
+    isEnabled: f.isEnabled,
+    planGating: f.planGating,
+    schoolIds: f.schoolIds,
+  }))
 
   return (
     <div>
       <PageHeader
         title="Feature Flags"
-        description="Toggle features per plan or per school"
+        description="Toggle features, set minimum plan tier, or run a pilot on specific schools"
       />
-      <div className="mt-6 rounded-lg border bg-white p-6">
-        {flags.length > 0 ? (
-          <div className="space-y-2">
-            {flags.map((f) => (
-              <div key={f.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
-                <span className="font-mono text-sm">{f.key}</span>
-                <span className={`text-sm font-medium ${f.isEnabled ? 'text-green-600' : 'text-gray-400'}`}>
-                  {f.isEnabled ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No feature flags configured.</p>
-        )}
+      <div className="mt-6">
+        <FeatureFlagsClient flags={rows} schools={schools} />
       </div>
     </div>
   )
