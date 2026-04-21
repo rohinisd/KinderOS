@@ -15,7 +15,7 @@ export default async function SuperAdminLayout({
     <div className="flex h-screen overflow-hidden">
       <Sidebar portal="superadmin" />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopBar schoolName={`Super Admin · ${admin.firstName}`} />
+        <TopBar schoolName={`Super Admin · ${admin.firstName}`} portal="superadmin" />
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
           {children}
         </main>

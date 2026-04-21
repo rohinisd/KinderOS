@@ -21,7 +21,7 @@ export default async function OwnerDashboardLayout({
     <div className="flex h-screen overflow-hidden">
       <Sidebar portal="owner" />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopBar schoolName={user.school.name} />
+        <TopBar schoolName={user.school.name} portal="owner" />
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
           {children}
         </main>
