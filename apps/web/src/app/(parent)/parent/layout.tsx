@@ -1,4 +1,5 @@
 import { TopBar } from '@/components/layout/topbar'
+import { auth } from '@clerk/nextjs/server'
 import { getParentPortalUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
@@ -9,6 +10,9 @@ export default async function ParentLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
   const parent = await getParentPortalUser()
   if (!parent) redirect('/no-access')
   if (!parent.school.isActive) redirect('/no-access')

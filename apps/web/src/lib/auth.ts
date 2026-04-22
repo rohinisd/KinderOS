@@ -267,12 +267,8 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
   const emails = collectClerkUserEmails(clerkUser)
   if (emails.length === 0) return null
 
-  const parent = await prisma.parent.findFirst({
-    where: {
-      OR: emails.map((email) => ({
-        email: { equals: email, mode: 'insensitive' as const },
-      })),
-    },
+  let parent = await prisma.parent.findUnique({
+    where: { clerkUserId: userId },
     include: {
       students: {
         where: { deletedAt: null },
@@ -282,6 +278,23 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
     },
   })
 
+  if (!parent) {
+    parent = await prisma.parent.findFirst({
+      where: {
+        OR: emails.map((email) => ({
+          email: { equals: email, mode: 'insensitive' as const },
+        })),
+      },
+      include: {
+        students: {
+          where: { deletedAt: null },
+          include: { school: true },
+          take: 1,
+        },
+      },
+    })
+  }
+
   if (!parent || parent.students.length === 0) return null
 
   const firstStudent = parent.students[0]
@@ -289,8 +302,8 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
 
   const school = firstStudent.school
 
-  // Link clerkUserId to Parent record the first time they sign in
-  if (!parent.clerkUserId) {
+  // Keep Parent.clerkUserId in sync with the active Clerk account for this parent email.
+  if (parent.clerkUserId !== userId) {
     await prisma.parent.update({
       where: { id: parent.id },
       data: { clerkUserId: userId },

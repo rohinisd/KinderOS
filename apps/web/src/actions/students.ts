@@ -56,7 +56,7 @@ export async function createStudent(
             firstName: data.parentName.split(' ')[0] ?? data.parentName,
             lastName: data.parentName.split(' ').slice(1).join(' ') || '',
             phone: normalizePhone(data.parentPhone),
-            email: data.parentEmail || null,
+            email: data.parentEmail ? data.parentEmail.trim().toLowerCase() : null,
             relation: data.parentRelation,
           },
         },
