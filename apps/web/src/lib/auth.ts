@@ -60,6 +60,18 @@ function collectClerkUserEmails(user: {
   return [...out]
 }
 
+function canonicalizeEmailForMatch(email: string): string {
+  const normalized = email.trim().toLowerCase()
+  const [local, domain] = normalized.split('@')
+  if (!local || !domain) return normalized
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    const localWithoutTag = local.split('+')[0] ?? local
+    const localWithoutDots = localWithoutTag.replace(/\./g, '')
+    return `${localWithoutDots}@gmail.com`
+  }
+  return normalized
+}
+
 /**
  * Try to link a pre-created Staff record (invited by owner/super admin)
  * to this Clerk user. Matches by email where clerkUserId is null.
@@ -266,6 +278,7 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
   const clerkUser = await client.users.getUser(userId)
   const emails = collectClerkUserEmails(clerkUser)
   if (emails.length === 0) return null
+  const canonicalEmails = [...new Set(emails.map(canonicalizeEmailForMatch))]
 
   let parent = await prisma.parent.findUnique({
     where: { clerkUserId: userId },
@@ -306,6 +319,48 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
       FROM parents p
       WHERE p.email IS NOT NULL
         AND LOWER(TRIM(p.email)) = ANY(${normalizedEmails}::text[])
+      ORDER BY p."updatedAt" DESC
+      LIMIT 1
+    `
+    const parentId = rows[0]?.id
+    if (parentId) {
+      parent = await prisma.parent.findFirst({
+        where: {
+          id: parentId,
+          students: { some: { deletedAt: null } },
+        },
+        include: {
+          students: {
+            where: { deletedAt: null },
+            include: { school: true },
+            take: 1,
+          },
+        },
+      })
+    }
+  }
+
+  // Gmail alias fallback (dots/+tag): ro.hin+abc@gmail.com == rohin@gmail.com
+  if (!parent) {
+    const rows = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT p.id
+      FROM parents p
+      WHERE p.email IS NOT NULL
+        AND (
+          CASE
+            WHEN LOWER(TRIM(p.email)) LIKE '%@gmail.com'
+              OR LOWER(TRIM(p.email)) LIKE '%@googlemail.com'
+            THEN CONCAT(
+              REPLACE(
+                REGEXP_REPLACE(SPLIT_PART(LOWER(TRIM(p.email)), '@', 1), '\\+.*$', ''),
+                '.',
+                ''
+              ),
+              '@gmail.com'
+            )
+            ELSE LOWER(TRIM(p.email))
+          END
+        ) = ANY(${canonicalEmails}::text[])
       ORDER BY p."updatedAt" DESC
       LIMIT 1
     `
