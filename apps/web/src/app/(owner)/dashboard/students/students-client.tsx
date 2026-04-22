@@ -107,11 +107,14 @@ export function StudentsClient({
     const form = new FormData(e.currentTarget)
 
     startTransition(async () => {
+      const rawClassId = form.get('classId') as string
+      const classId = rawClassId && rawClassId !== '_none_' ? rawClassId : null
+
       if (editingStudent) {
         const result = await updateStudent(editingStudent.id, {
           firstName: form.get('firstName') as string,
           lastName: form.get('lastName') as string,
-          classId: (form.get('classId') as string) || null,
+          classId,
           gender: form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER',
           bloodGroup: (form.get('bloodGroup') as string) || undefined,
           allergies: (form.get('allergies') as string) || undefined,
@@ -127,7 +130,7 @@ export function StudentsClient({
         const result = await createStudent({
           firstName: form.get('firstName') as string,
           lastName: form.get('lastName') as string,
-          classId: (form.get('classId') as string) || undefined,
+          classId: classId ?? undefined,
           gender: (form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER') || 'OTHER',
           bloodGroup: (form.get('bloodGroup') as string) || undefined,
           allergies: (form.get('allergies') as string) || undefined,
@@ -290,12 +293,12 @@ export function StudentsClient({
 
             <div className="space-y-1.5">
               <Label htmlFor="classId">Class</Label>
-              <Select name="classId" defaultValue={editingStudent?.classId ?? ''}>
+              <Select name="classId" defaultValue={editingStudent?.classId ?? '_none_'}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="_none_">Unassigned</SelectItem>
                   {classes.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
