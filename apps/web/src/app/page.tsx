@@ -1,7 +1,6 @@
 import { headers } from 'next/headers'
 import { auth } from '@clerk/nextjs/server'
-import { isPlatformSuperAdminByClerkUserId } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { getAuthUser, isPlatformSuperAdminByClerkUserId } from '@/lib/auth'
 import { normalizeHost, isPlatformHost } from '@/lib/platform-host'
 import { getSchoolLandingByHost } from '@/lib/school-from-host'
 import { SchoolPublicLanding } from '@/components/landing/school-public-landing'
@@ -46,14 +45,13 @@ export default async function HomePage() {
   let isSuperAdmin = false
 
   if (userId) {
-    const staff = await prisma.staff.findUnique({
-      where: { clerkUserId: userId },
-      include: { school: { select: { name: true } } },
-    })
-    if (staff) {
-      staffFirstName = staff.firstName
-      schoolName = staff.school.name
-      role = staff.role
+    // Must use getAuthUser (not a raw staff-by-clerk id query) so invited staff
+    // are linked by email on first home load after sign-in.
+    const user = await getAuthUser()
+    if (user) {
+      staffFirstName = user.firstName
+      schoolName = user.school.name
+      role = user.role
     }
 
     isSuperAdmin = await isPlatformSuperAdminByClerkUserId(userId)

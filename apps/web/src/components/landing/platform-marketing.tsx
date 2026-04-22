@@ -103,7 +103,7 @@ export function PlatformMarketing() {
             Start with your school
           </Link>
           <Link
-            href="/sign-in"
+            href="/sign-in?redirect_url=/office/students"
             className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
           >
             Staff sign in
