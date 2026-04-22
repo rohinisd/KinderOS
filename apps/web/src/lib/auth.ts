@@ -47,6 +47,19 @@ function staffToAuthUser(staff: {
   }
 }
 
+/** Every email on the Clerk user (primary is not always `emailAddresses[0]` for Google). */
+function collectClerkUserEmails(user: {
+  id: string
+  emailAddresses: Array<{ emailAddress: string; id?: string }>
+  primaryEmailAddressId: string | null
+}): string[] {
+  const out = new Set<string>()
+  for (const a of user.emailAddresses) {
+    if (a.emailAddress) out.add(a.emailAddress.toLowerCase())
+  }
+  return [...out]
+}
+
 /**
  * Try to link a pre-created Staff record (invited by owner/super admin)
  * to this Clerk user. Matches by email where clerkUserId is null.
@@ -55,11 +68,22 @@ async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
   try {
     const client = await clerkClient()
     const clerkUser = await client.users.getUser(clerkUserId)
-    const email = clerkUser.emailAddresses[0]?.emailAddress
-    if (!email) return null
+    const emails = collectClerkUserEmails(clerkUser)
+    if (emails.length === 0) return null
 
     const staff = await prisma.staff.findFirst({
-      where: { email, clerkUserId: null, status: 'ACTIVE' },
+      where: {
+        AND: [
+          { clerkUserId: null },
+          { status: 'ACTIVE' },
+          { deletedAt: null },
+          {
+            OR: emails.map((email) => ({
+              email: { equals: email, mode: 'insensitive' as const },
+            })),
+          },
+        ],
+      },
       include: { school: true },
     })
     if (!staff) return null
@@ -191,19 +215,6 @@ const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS ?? '')
 
 export function isSuperAdminEmail(email: string): boolean {
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase())
-}
-
-/** Collect every email on the Clerk user (primary is not always emailAddresses[0]). */
-function collectClerkUserEmails(user: {
-  id: string
-  emailAddresses: Array<{ emailAddress: string; id?: string }>
-  primaryEmailAddressId: string | null
-}): string[] {
-  const out = new Set<string>()
-  for (const a of user.emailAddresses) {
-    if (a.emailAddress) out.add(a.emailAddress.toLowerCase())
-  }
-  return [...out]
 }
 
 /**
