@@ -278,9 +278,11 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
     },
   })
 
-  if (!parent) {
+  // Ignore stale parent records that no longer have active students linked.
+  if (!parent || parent.students.length === 0) {
     parent = await prisma.parent.findFirst({
       where: {
+        students: { some: { deletedAt: null } },
         OR: emails.map((email) => ({
           email: { equals: email, mode: 'insensitive' as const },
         })),
@@ -292,7 +294,37 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
           take: 1,
         },
       },
+      orderBy: { updatedAt: 'desc' },
     })
+  }
+
+  // Last-resort fallback: match normalized email (trim + lowercase) to handle legacy trailing spaces.
+  if (!parent) {
+    const normalizedEmails = emails.map((email) => email.trim().toLowerCase())
+    const rows = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT p.id
+      FROM parents p
+      WHERE p.email IS NOT NULL
+        AND LOWER(TRIM(p.email)) = ANY(${normalizedEmails}::text[])
+      ORDER BY p."updatedAt" DESC
+      LIMIT 1
+    `
+    const parentId = rows[0]?.id
+    if (parentId) {
+      parent = await prisma.parent.findFirst({
+        where: {
+          id: parentId,
+          students: { some: { deletedAt: null } },
+        },
+        include: {
+          students: {
+            where: { deletedAt: null },
+            include: { school: true },
+            take: 1,
+          },
+        },
+      })
+    }
   }
 
   if (!parent || parent.students.length === 0) return null
