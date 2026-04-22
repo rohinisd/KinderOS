@@ -54,6 +54,9 @@ export default async function ParentFeesPage() {
   const children = [...byId.values()]
   const childIds = children.map((c) => c.id)
 
+  const noChildrenMessage =
+    'No children are linked to your account for this school. Contact the school office if you believe this is a mistake.'
+
   if (children.length === 0) {
     return (
       <div>
@@ -64,7 +67,7 @@ export default async function ParentFeesPage() {
         <Card className="mt-6 border-amber-100 bg-amber-50/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg text-amber-900">Welcome</CardTitle>
-            <CardDescription className="text-amber-800/90">{noChildrenMessage}</CardDescription>
+            <CardDescription className="text-amber-800/90">No children linked to your account. Please contact your school.</CardDescription>
           </CardHeader>
         </Card>
       </div>
