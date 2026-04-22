@@ -1,4 +1,4 @@
-import { getAuthUser } from '@/lib/auth'
+import { getParentPortalUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -39,27 +39,10 @@ function attendanceLabel(status: AttendanceStatus): { text: string; variant: 'su
 }
 
 export default async function ParentDashboard() {
-  const user = await getAuthUser()
-  if (!user) redirect('/sign-in')
+  const user = await getParentPortalUser()
+  if (!user) redirect('/no-access')
 
-  const noChildrenMessage = 'No children linked to your account. Please contact your school to link your account.'
-
-  if (!user.email) {
-    return (
-      <div>
-        <PageHeader
-          title="My Child's Day"
-          description="A gentle snapshot of attendance, news, and fees for your little one"
-        />
-        <Card className="mt-6 border-amber-100 bg-amber-50/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-amber-900">We couldn&apos;t find a linked profile</CardTitle>
-            <CardDescription className="text-amber-800/90">{noChildrenMessage}</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    )
-  }
+  const noChildrenMessage = 'No children linked to your account. Please contact your school.'
 
   const parentRows = await prisma.parent.findMany({
     where: { email: { equals: user.email, mode: 'insensitive' } },

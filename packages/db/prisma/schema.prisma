@@ -287,6 +287,7 @@ enum StaffRole {
   ACCOUNTANT
   SUPPORT_STAFF
   DRIVER
+  PARENT
 }
 
 enum StaffStatus {

@@ -119,6 +119,38 @@ export async function updateStudent(
   }
 }
 
+export async function updateParentEmail(
+  parentId: string,
+  email: string
+): Promise<ActionResult<{ parentId: string }>> {
+  try {
+    const { schoolId } = await requireSchoolAuth()
+
+    // Verify the parent belongs to a student in this school
+    const parent = await prisma.parent.findFirst({
+      where: {
+        id: parentId,
+        students: { some: { schoolId } },
+      },
+    })
+    if (!parent) return err('Parent not found')
+
+    const normalizedEmail = email.trim().toLowerCase() || null
+
+    await prisma.parent.update({
+      where: { id: parentId },
+      data: { email: normalizedEmail, clerkUserId: null }, // reset clerkUserId so next login re-links
+    })
+
+    revalidatePath('/dashboard/students')
+    revalidatePath('/office/students')
+    return ok({ parentId })
+  } catch (error) {
+    console.error('[updateParentEmail]', error)
+    return err('Failed to update parent email')
+  }
+}
+
 export async function deleteStudent(
   id: string
 ): Promise<ActionResult<{ success: boolean }>> {

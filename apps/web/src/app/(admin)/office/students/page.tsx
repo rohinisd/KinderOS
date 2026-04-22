@@ -14,7 +14,7 @@ export default async function OfficeStudentsPage() {
       include: {
         class: { select: { id: true, name: true } },
         parents: {
-          select: { id: true, firstName: true, lastName: true, phone: true, relation: true },
+          select: { id: true, firstName: true, lastName: true, phone: true, email: true, relation: true },
         },
       },
       orderBy: { createdAt: 'desc' },

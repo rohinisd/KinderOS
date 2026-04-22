@@ -222,6 +222,99 @@ export async function requireTeacher() {
   }
 }
 
+export async function requireParent() {
+  const user = await requireAuth()
+  if (user.role !== 'PARENT') redirect('/no-access')
+  return {
+    schoolId: user.school.id,
+    clerkOrgId: user.clerkUserId,
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  }
+}
+
+// ─── Parent Portal (email-based, no Staff row needed) ──────────────
+
+export type ParentPortalUser = {
+  parentId: string
+  clerkUserId: string
+  email: string
+  firstName: string
+  lastName: string
+  schoolId: string
+  school: {
+    id: string
+    name: string
+    slug: string
+    logoUrl: string | null
+    brandColor: string
+    isActive: boolean
+  }
+}
+
+/**
+ * Authenticate a parent by matching their Clerk email against Parent.email.
+ * No Staff row is required. Staff add the parent's Gmail in the student sheet;
+ * that email becomes the login key for the parent portal.
+ */
+export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
+  const { userId } = await auth()
+  if (!userId) return null
+
+  const client = await clerkClient()
+  const clerkUser = await client.users.getUser(userId)
+  const emails = collectClerkUserEmails(clerkUser)
+  if (emails.length === 0) return null
+
+  const parent = await prisma.parent.findFirst({
+    where: {
+      OR: emails.map((email) => ({
+        email: { equals: email, mode: 'insensitive' as const },
+      })),
+    },
+    include: {
+      students: {
+        where: { deletedAt: null },
+        include: { school: true },
+        take: 1,
+      },
+    },
+  })
+
+  if (!parent || parent.students.length === 0) return null
+
+  const school = parent.students[0].school
+
+  // Link clerkUserId to Parent record the first time they sign in
+  if (!parent.clerkUserId) {
+    await prisma.parent.update({
+      where: { id: parent.id },
+      data: { clerkUserId: userId },
+    })
+  }
+
+  const primaryEmail =
+    emails.find((e) => e === parent.email?.toLowerCase()) ?? emails[0]
+
+  return {
+    parentId: parent.id,
+    clerkUserId: userId,
+    email: primaryEmail,
+    firstName: parent.firstName,
+    lastName: parent.lastName,
+    schoolId: school.id,
+    school: {
+      id: school.id,
+      name: school.name,
+      slug: school.slug,
+      logoUrl: school.logoUrl,
+      brandColor: school.brandColor,
+      isActive: school.isActive,
+    },
+  }
+}
+
 // ─── Super Admin ──────────────────────────────────────
 
 const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS ?? '')

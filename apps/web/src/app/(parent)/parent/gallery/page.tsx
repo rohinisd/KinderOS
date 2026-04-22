@@ -1,4 +1,4 @@
-import { getAuthUser } from '@/lib/auth'
+import { getParentPortalUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
@@ -10,11 +10,11 @@ import type { Prisma } from '@kinderos/db'
 export const dynamic = 'force-dynamic'
 
 export default async function GalleryPage() {
-  const user = await getAuthUser()
-  if (!user) redirect('/sign-in')
+  const user = await getParentPortalUser()
+  if (!user) redirect('/no-access')
 
   const childClassIds: string[] = []
-  if (user.email) {
+  {
     const parentRows = await prisma.parent.findMany({
       where: { email: { equals: user.email, mode: 'insensitive' } },
       include: {

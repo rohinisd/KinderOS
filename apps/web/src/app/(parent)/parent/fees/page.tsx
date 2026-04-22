@@ -1,4 +1,4 @@
-import { getAuthUser } from '@/lib/auth'
+import { getParentPortalUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/layout/page-header'
@@ -32,27 +32,8 @@ const feeStatusBadge: Record<
 }
 
 export default async function ParentFeesPage() {
-  const user = await getAuthUser()
-  if (!user) redirect('/sign-in')
-
-  const noChildrenMessage = 'No children linked to your account. Please contact your school to link your account.'
-
-  if (!user.email) {
-    return (
-      <div>
-        <PageHeader
-          title="Fee Payments"
-          description="Invoices and amounts for your children in one place"
-        />
-        <Card className="mt-6 border-amber-100 bg-amber-50/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-amber-900">We couldn&apos;t find a linked profile</CardTitle>
-            <CardDescription className="text-amber-800/90">{noChildrenMessage}</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    )
-  }
+  const user = await getParentPortalUser()
+  if (!user) redirect('/no-access')
 
   const parentRows = await prisma.parent.findMany({
     where: { email: { equals: user.email, mode: 'insensitive' } },

@@ -22,9 +22,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Search, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, Mail, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { createStudent, updateStudent, deleteStudent } from '@/actions/students'
+import { createStudent, updateStudent, deleteStudent, updateParentEmail } from '@/actions/students'
 
 type Student = {
   id: string
@@ -39,7 +39,7 @@ type Student = {
   medicalNotes: string | null
   classId: string | null
   class: { id: string; name: string } | null
-  parents: { id: string; firstName: string; lastName: string; phone: string; relation: string }[]
+  parents: { id: string; firstName: string; lastName: string; phone: string; email: string | null; relation: string }[]
 }
 
 type ClassOption = { id: string; name: string }
@@ -64,6 +64,8 @@ export function StudentsClient({
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [parentEmailInputs, setParentEmailInputs] = useState<Record<string, string>>({})
+  const [savingParentId, setSavingParentId] = useState<string | null>(null)
 
   const filtered = students.filter((s) => {
     const matchesSearch =
@@ -81,7 +83,23 @@ export function StudentsClient({
 
   function openEdit(student: Student) {
     setEditingStudent(student)
+    const initial: Record<string, string> = {}
+    for (const p of student.parents) initial[p.id] = p.email ?? ''
+    setParentEmailInputs(initial)
     setSheetOpen(true)
+  }
+
+  function handleSaveParentEmail(parentId: string) {
+    setSavingParentId(parentId)
+    startTransition(async () => {
+      const result = await updateParentEmail(parentId, parentEmailInputs[parentId] ?? '')
+      if (result.success) {
+        toast.success('Parent Gmail updated — they can now log in with this email')
+      } else {
+        toast.error(result.error)
+      }
+      setSavingParentId(null)
+    })
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -314,6 +332,52 @@ export function StudentsClient({
               <Label htmlFor="medicalNotes">Medical Notes</Label>
               <Textarea id="medicalNotes" name="medicalNotes" rows={2} defaultValue={editingStudent?.medicalNotes ?? ''} />
             </div>
+
+            {editingStudent && editingStudent.parents.length > 0 && (
+              <div className="border-t pt-4 space-y-3">
+                <div>
+                  <h4 className="text-sm font-semibold">Parent Portal Access</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Set the Gmail address each parent uses to log in. Only this email can access the parent portal.
+                  </p>
+                </div>
+                {editingStudent.parents.map((parent) => (
+                  <div key={parent.id} className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{parent.firstName} {parent.lastName}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{parent.relation.toLowerCase()} · {parent.phone}</p>
+                      </div>
+                      {parent.email && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Mail className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          type="email"
+                          placeholder="parent@gmail.com"
+                          value={parentEmailInputs[parent.id] ?? ''}
+                          onChange={(e) => setParentEmailInputs((prev) => ({ ...prev, [parent.id]: e.target.value }))}
+                          className="pl-8 h-8 text-sm"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 shrink-0"
+                        disabled={savingParentId === parent.id || isPending}
+                        onClick={() => handleSaveParentEmail(parent.id)}
+                      >
+                        {savingParentId === parent.id ? 'Saving…' : 'Save'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {!editingStudent && (
               <>
