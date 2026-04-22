@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 
 /** Anyone who uses `/office` day-to-day (includes support/driver roles linked from home). */
+/** All school Staff roles that may use /office (ops + teaching). */
 const OFFICE_ACCESS_ROLES = [
   'OWNER',
   'PRINCIPAL',
@@ -14,6 +15,8 @@ const OFFICE_ACCESS_ROLES = [
   'ACCOUNTANT',
   'SUPPORT_STAFF',
   'DRIVER',
+  'CLASS_TEACHER',
+  'SUBJECT_TEACHER',
 ] as const
 
 export default async function AdminLayout({

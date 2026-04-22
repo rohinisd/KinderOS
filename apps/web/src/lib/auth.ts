@@ -55,7 +55,7 @@ function collectClerkUserEmails(user: {
 }): string[] {
   const out = new Set<string>()
   for (const a of user.emailAddresses) {
-    if (a.emailAddress) out.add(a.emailAddress.toLowerCase())
+    if (a.emailAddress) out.add(a.emailAddress.trim().toLowerCase())
   }
   return [...out]
 }
@@ -71,12 +71,16 @@ async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
     const emails = collectClerkUserEmails(clerkUser)
     if (emails.length === 0) return null
 
-    const staff = await prisma.staff.findFirst({
+    const base = {
+      clerkUserId: null,
+      status: 'ACTIVE' as const,
+      deletedAt: null,
+    }
+
+    let staff = await prisma.staff.findFirst({
       where: {
         AND: [
-          { clerkUserId: null },
-          { status: 'ACTIVE' },
-          { deletedAt: null },
+          { ...base },
           {
             OR: emails.map((email) => ({
               email: { equals: email, mode: 'insensitive' as const },
@@ -86,6 +90,18 @@ async function linkStaffByEmail(clerkUserId: string): Promise<AuthUser | null> {
       },
       include: { school: true },
     })
+
+    // Fallback: exact lowercase match (insensitive can misbehave on some DB collations)
+    if (!staff) {
+      staff = await prisma.staff.findFirst({
+        where: {
+          ...base,
+          email: { in: emails },
+        },
+        include: { school: true },
+      })
+    }
+
     if (!staff) return null
 
     const updated = await prisma.staff.update({

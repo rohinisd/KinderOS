@@ -28,6 +28,18 @@ export default async function NoAccessPage() {
           Once invited, sign in again and you&apos;ll be automatically connected
           to your school with the correct role.
         </p>
+        <p className="mt-3 text-sm text-gray-500">
+          If you are already on the team list, confirm the email on your staff
+          profile matches the Google account you use (including no extra spaces). Try{' '}
+          <Link href="/classroom" className="text-brand-600 underline">
+            Classroom
+          </Link>{' '}
+          for teachers, or{' '}
+          <Link href="/office/students" className="text-brand-600 underline">
+            Office
+          </Link>{' '}
+          for office staff.
+        </p>
         <div className="mt-8 flex flex-col items-center gap-3">
           <SignOutButton>
             <button className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-purple-700">
