@@ -284,7 +284,10 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
 
   if (!parent || parent.students.length === 0) return null
 
-  const school = parent.students[0].school
+  const firstStudent = parent.students[0]
+  if (!firstStudent) return null
+
+  const school = firstStudent.school
 
   // Link clerkUserId to Parent record the first time they sign in
   if (!parent.clerkUserId) {
@@ -294,8 +297,10 @@ export async function getParentPortalUser(): Promise<ParentPortalUser | null> {
     })
   }
 
+  const firstClerkEmail = emails[0]
+  if (!firstClerkEmail) return null
   const primaryEmail =
-    emails.find((e) => e === parent.email?.toLowerCase()) ?? emails[0]
+    emails.find((e) => e === parent.email?.toLowerCase()) ?? firstClerkEmail
 
   return {
     parentId: parent.id,

@@ -67,7 +67,7 @@ export default async function ParentFeesPage() {
         <Card className="mt-6 border-amber-100 bg-amber-50/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg text-amber-900">Welcome</CardTitle>
-            <CardDescription className="text-amber-800/90">No children linked to your account. Please contact your school.</CardDescription>
+            <CardDescription className="text-amber-800/90">{noChildrenMessage}</CardDescription>
           </CardHeader>
         </Card>
       </div>
