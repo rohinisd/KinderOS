@@ -9,10 +9,11 @@
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "typecheck": "turbo typecheck",
+    "postinstall": "pnpm run db:generate",
     "db:push": "pnpm --filter @kinderos/db run db:push",
     "db:studio": "pnpm --filter @kinderos/db run db:studio",
     "db:seed": "pnpm --filter @kinderos/db run db:seed",
-    "db:generate": "pnpm --filter @kinderos/db run generate",
+    "db:generate": "pnpm --filter @kinderos/db run db:generate",
     "db:migrate": "pnpm --filter @kinderos/db run db:migrate"
   },
   "devDependencies": {
