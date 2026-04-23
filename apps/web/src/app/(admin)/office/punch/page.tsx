@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic'
 
 const ALL_STAFF_ATTENDANCE_ROLES = new Set(['OWNER', 'PRINCIPAL', 'ADMIN'])
 const STATUS_FILTERS = new Set(['all', 'punched_in', 'punched_out', 'not_marked'] as const)
+const PERIOD_FILTERS = new Set(['day', 'week', 'month'] as const)
 
 function todayIsoDate(): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -34,6 +35,36 @@ function parseStatusFilter(raw: string | undefined): 'all' | 'punched_in' | 'pun
   return STATUS_FILTERS.has(raw as 'all' | 'punched_in' | 'punched_out' | 'not_marked')
     ? (raw as 'all' | 'punched_in' | 'punched_out' | 'not_marked')
     : 'all'
+}
+
+function parsePeriodFilter(raw: string | undefined): 'day' | 'week' | 'month' {
+  if (!raw) return 'day'
+  return PERIOD_FILTERS.has(raw as 'day' | 'week' | 'month')
+    ? (raw as 'day' | 'week' | 'month')
+    : 'day'
+}
+
+function utcRangeForPeriod(isoDate: string, period: 'day' | 'week' | 'month'): { start: Date; end: Date; dayCount: number } {
+  const start = new Date(`${isoDate}T00:00:00.000Z`)
+  if (period === 'day') {
+    const end = new Date(start)
+    end.setUTCDate(end.getUTCDate() + 1)
+    return { start, end, dayCount: 1 }
+  }
+
+  if (period === 'week') {
+    const weekStart = new Date(start)
+    const mondayOffset = (weekStart.getUTCDay() + 6) % 7
+    weekStart.setUTCDate(weekStart.getUTCDate() - mondayOffset)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setUTCDate(weekEnd.getUTCDate() + 7)
+    return { start: weekStart, end: weekEnd, dayCount: 7 }
+  }
+
+  const monthStart = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1))
+  const monthEnd = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1))
+  const dayCount = Math.round((monthEnd.getTime() - monthStart.getTime()) / (24 * 60 * 60 * 1000))
+  return { start: monthStart, end: monthEnd, dayCount }
 }
 
 function istDayRange(isoDate: string): { start: Date; end: Date } {
@@ -61,7 +92,7 @@ function formatTs(date: Date | null): string {
   })
 }
 
-type SearchParams = Promise<{ date?: string | string[]; status?: string | string[] }>
+type SearchParams = Promise<{ date?: string | string[]; status?: string | string[]; period?: string | string[] }>
 
 export default async function OfficePunchPage({
   searchParams,
@@ -75,11 +106,14 @@ export default async function OfficePunchPage({
   const params = await searchParams
   const rawDate = typeof params.date === 'string' ? params.date : undefined
   const rawStatus = typeof params.status === 'string' ? params.status : undefined
+  const rawPeriod = typeof params.period === 'string' ? params.period : undefined
   const selectedDate = parseViewDate(rawDate)
   const selectedStatus = parseStatusFilter(rawStatus)
-  const { start, end } = istDayRange(selectedDate)
+  const selectedPeriod = parsePeriodFilter(rawPeriod)
+  const { start, end, dayCount } = utcRangeForPeriod(selectedDate, selectedPeriod)
+  const today = istDayRange(todayIsoDate())
 
-  const [staffRows, dayRecords] = await Promise.all([
+  const [staffRows, periodRecords, myTodayRecord] = await Promise.all([
     prisma.staff.findMany({
       where: { schoolId, status: 'ACTIVE', deletedAt: null },
       select: {
@@ -93,37 +127,68 @@ export default async function OfficePunchPage({
     prisma.staffAttendance.findMany({
       where: { schoolId, date: { gte: start, lt: end } },
       select: { staffId: true, checkIn: true, checkOut: true, status: true },
+      orderBy: { date: 'desc' },
+    }),
+    prisma.staffAttendance.findFirst({
+      where: {
+        schoolId,
+        staffId: userId,
+        date: { gte: today.start, lt: today.end },
+      },
+      select: { status: true, checkIn: true, checkOut: true },
     }),
   ])
 
-  const recordMap = new Map(dayRecords.map((r) => [r.staffId, r]))
+  const recordsByStaff = new Map<string, typeof periodRecords>()
+  for (const rec of periodRecords) {
+    const arr = recordsByStaff.get(rec.staffId) ?? []
+    arr.push(rec)
+    recordsByStaff.set(rec.staffId, arr)
+  }
 
-  const myRecord = recordMap.get(userId)
-  const serialized = myRecord
+  const serialized = myTodayRecord
     ? {
-      status: myRecord.status,
-      checkIn: myRecord.checkIn?.toISOString() ?? null,
-      checkOut: myRecord.checkOut?.toISOString() ?? null,
+      status: myTodayRecord.status,
+      checkIn: myTodayRecord.checkIn?.toISOString() ?? null,
+      checkOut: myTodayRecord.checkOut?.toISOString() ?? null,
     }
     : null
 
   const allRows = staffRows.map((staff) => {
-    const rec = recordMap.get(staff.id)
-    const derived = displayStatus(rec?.checkIn ?? null, rec?.checkOut ?? null)
+    const recs = recordsByStaff.get(staff.id) ?? []
+    const latest = recs[0]
+    const punchedInDays = recs.filter((r) => !!r.checkIn).length
+    const punchedOutDays = recs.filter((r) => !!r.checkOut).length
+    const workedMinutes = recs.reduce((sum, r) => {
+      if (!r.checkIn || !r.checkOut) return sum
+      return sum + Math.max(0, Math.round((r.checkOut.getTime() - r.checkIn.getTime()) / 60000))
+    }, 0)
+    const notMarkedDays = Math.max(0, dayCount - punchedInDays)
+    const derived = displayStatus(latest?.checkIn ?? null, latest?.checkOut ?? null)
     return {
       id: staff.id,
       name: `${staff.firstName} ${staff.lastName}`.trim(),
       role: staff.role,
-      checkIn: rec?.checkIn ?? null,
-      checkOut: rec?.checkOut ?? null,
+      checkIn: latest?.checkIn ?? null,
+      checkOut: latest?.checkOut ?? null,
       derived,
+      punchedInDays,
+      punchedOutDays,
+      notMarkedDays,
+      workedMinutes,
     }
   })
 
   const scopeRows = canViewAll ? allRows : allRows.filter((r) => r.id === userId)
-  const filteredRows = selectedStatus === 'all'
-    ? scopeRows
-    : scopeRows.filter((r) => r.derived.toLowerCase() === selectedStatus)
+  const filteredRows =
+    selectedStatus === 'all'
+      ? scopeRows
+      : scopeRows.filter((r) => {
+          if (selectedPeriod === 'day') return r.derived.toLowerCase() === selectedStatus
+          if (selectedStatus === 'punched_in') return r.punchedInDays > 0
+          if (selectedStatus === 'punched_out') return r.punchedOutDays > 0
+          return r.notMarkedDays > 0
+        })
 
   return (
     <div className="space-y-6">
@@ -131,7 +196,7 @@ export default async function OfficePunchPage({
         title="Staff Attendance"
         description={
           canViewAll
-            ? 'Daily staff attendance with date and status filters'
+            ? 'Staff attendance with daily, weekly, and monthly views'
             : 'Mark your attendance time for today'
         }
       />
@@ -158,6 +223,19 @@ export default async function OfficePunchPage({
                 />
               </div>
               <div className="space-y-1">
+                <label htmlFor="period" className="text-xs text-muted-foreground">View</label>
+                <select
+                  id="period"
+                  name="period"
+                  defaultValue={selectedPeriod}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="day">Daily</option>
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                </select>
+              </div>
+              <div className="space-y-1">
                 <label htmlFor="status" className="text-xs text-muted-foreground">Status</label>
                 <select
                   id="status"
@@ -181,15 +259,26 @@ export default async function OfficePunchPage({
                 <TableRow>
                   <TableHead>Staff</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Check In</TableHead>
-                  <TableHead>Check Out</TableHead>
+                  {selectedPeriod === 'day' ? (
+                    <>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Check In</TableHead>
+                      <TableHead>Check Out</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead>Punched In Days</TableHead>
+                      <TableHead>Punched Out Days</TableHead>
+                      <TableHead>Not Marked Days</TableHead>
+                      <TableHead>Total Hours</TableHead>
+                    </>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                    <TableCell colSpan={selectedPeriod === 'day' ? 5 : 6} className="h-20 text-center text-muted-foreground">
                       No attendance records for selected filters.
                     </TableCell>
                   </TableRow>
@@ -198,13 +287,24 @@ export default async function OfficePunchPage({
                     <TableRow key={row.id}>
                       <TableCell className="font-medium">{row.name}</TableCell>
                       <TableCell>{row.role}</TableCell>
-                      <TableCell>
-                        <Badge variant={row.derived === 'PUNCHED_OUT' ? 'success' : row.derived === 'PUNCHED_IN' ? 'warning' : 'secondary'}>
-                          {row.derived === 'PUNCHED_OUT' ? 'Punched Out' : row.derived === 'PUNCHED_IN' ? 'Punched In' : 'Not Marked'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatTs(row.checkIn)}</TableCell>
-                      <TableCell>{formatTs(row.checkOut)}</TableCell>
+                      {selectedPeriod === 'day' ? (
+                        <>
+                          <TableCell>
+                            <Badge variant={row.derived === 'PUNCHED_OUT' ? 'success' : row.derived === 'PUNCHED_IN' ? 'warning' : 'secondary'}>
+                              {row.derived === 'PUNCHED_OUT' ? 'Punched Out' : row.derived === 'PUNCHED_IN' ? 'Punched In' : 'Not Marked'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatTs(row.checkIn)}</TableCell>
+                          <TableCell>{formatTs(row.checkOut)}</TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell>{row.punchedInDays}</TableCell>
+                          <TableCell>{row.punchedOutDays}</TableCell>
+                          <TableCell>{row.notMarkedDays}</TableCell>
+                          <TableCell>{(row.workedMinutes / 60).toFixed(1)}h</TableCell>
+                        </>
+                      )}
                     </TableRow>
                   ))
                 )}
