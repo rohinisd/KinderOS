@@ -92,6 +92,24 @@ function formatTs(date: Date | null): string {
   })
 }
 
+function dayKey(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
+function weekDays(start: Date): Array<{ key: string; label: string }> {
+  return Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(start)
+    d.setUTCDate(d.getUTCDate() + i)
+    const label = d.toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      timeZone: 'UTC',
+    })
+    return { key: dayKey(d), label }
+  })
+}
+
 type SearchParams = Promise<{ date?: string | string[]; status?: string | string[]; period?: string | string[] }>
 
 export default async function OfficePunchPage({
@@ -111,6 +129,7 @@ export default async function OfficePunchPage({
   const selectedStatus = parseStatusFilter(rawStatus)
   const selectedPeriod = parsePeriodFilter(rawPeriod)
   const { start, end, dayCount } = utcRangeForPeriod(selectedDate, selectedPeriod)
+  const weekColumns = selectedPeriod === 'week' ? weekDays(start) : []
   const today = istDayRange(todayIsoDate())
 
   const [staffRows, periodRecords, myTodayRecord] = await Promise.all([
@@ -156,6 +175,7 @@ export default async function OfficePunchPage({
 
   const allRows = staffRows.map((staff) => {
     const recs = recordsByStaff.get(staff.id) ?? []
+    const byDay = new Map(recs.map((r) => [dayKey(r.date), displayStatus(r.checkIn ?? null, r.checkOut ?? null)]))
     const latest = recs[0]
     const punchedInDays = recs.filter((r) => !!r.checkIn).length
     const punchedOutDays = recs.filter((r) => !!r.checkOut).length
@@ -176,6 +196,7 @@ export default async function OfficePunchPage({
       punchedOutDays,
       notMarkedDays,
       workedMinutes,
+      weekStatuses: weekColumns.map((d) => byDay.get(d.key) ?? 'NOT_MARKED'),
     }
   })
 
@@ -265,6 +286,13 @@ export default async function OfficePunchPage({
                       <TableHead>Check In</TableHead>
                       <TableHead>Check Out</TableHead>
                     </>
+                  ) : selectedPeriod === 'week' ? (
+                    <>
+                      {weekColumns.map((d) => (
+                        <TableHead key={d.key}>{d.label}</TableHead>
+                      ))}
+                      <TableHead>Total Hours</TableHead>
+                    </>
                   ) : (
                     <>
                       <TableHead>Punched In Days</TableHead>
@@ -278,7 +306,7 @@ export default async function OfficePunchPage({
               <TableBody>
                 {filteredRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={selectedPeriod === 'day' ? 5 : 6} className="h-20 text-center text-muted-foreground">
+                    <TableCell colSpan={selectedPeriod === 'day' ? 5 : selectedPeriod === 'week' ? 10 : 6} className="h-20 text-center text-muted-foreground">
                       No attendance records for selected filters.
                     </TableCell>
                   </TableRow>
@@ -296,6 +324,17 @@ export default async function OfficePunchPage({
                           </TableCell>
                           <TableCell>{formatTs(row.checkIn)}</TableCell>
                           <TableCell>{formatTs(row.checkOut)}</TableCell>
+                        </>
+                      ) : selectedPeriod === 'week' ? (
+                        <>
+                          {row.weekStatuses.map((s: 'PUNCHED_IN' | 'PUNCHED_OUT' | 'NOT_MARKED', idx: number) => (
+                            <TableCell key={`${row.id}-${idx}`}>
+                              <Badge variant={s === 'PUNCHED_OUT' ? 'success' : s === 'PUNCHED_IN' ? 'warning' : 'secondary'}>
+                                {s === 'PUNCHED_OUT' ? 'Out' : s === 'PUNCHED_IN' ? 'In' : '—'}
+                              </Badge>
+                            </TableCell>
+                          ))}
+                          <TableCell>{(row.workedMinutes / 60).toFixed(1)}h</TableCell>
                         </>
                       ) : (
                         <>
