@@ -25,6 +25,7 @@ export default async function HomePage() {
             tagline: school.tagline,
             description: school.description,
             logoUrl: school.logoUrl,
+            heroImageUrl: school.heroImageUrl,
             brandColor: school.brandColor,
             accentColor: school.accentColor,
             address: school.address,

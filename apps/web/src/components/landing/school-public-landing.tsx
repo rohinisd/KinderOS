@@ -13,6 +13,7 @@ type SchoolPublic = {
   tagline: string | null
   description: string | null
   logoUrl: string | null
+  heroImageUrl: string | null
   brandColor: string
   accentColor: string
   address: string | null
@@ -26,13 +27,16 @@ type SchoolPublic = {
  */
 export function SchoolPublicLanding({ school, basePath }: { school: SchoolPublic; basePath: string }) {
   const p = (path: string) => (basePath ? `${basePath}${path}` : path)
+  const heroBackground = school.heroImageUrl
+    ? `linear-gradient(135deg, ${school.brandColor}CC, ${school.accentColor}CC), url(${school.heroImageUrl})`
+    : `linear-gradient(135deg, ${school.brandColor}, ${school.accentColor})`
 
   return (
     <div className="min-h-screen">
       <section
-        className="relative flex min-h-[60vh] items-center justify-center"
+        className="relative flex min-h-[60vh] items-center justify-center bg-cover bg-center"
         style={{
-          background: `linear-gradient(135deg, ${school.brandColor}, ${school.accentColor})`,
+          background: heroBackground,
         }}
       >
         <div className="text-center text-white">
