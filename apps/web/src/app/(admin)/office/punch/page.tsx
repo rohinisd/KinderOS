@@ -145,7 +145,7 @@ export default async function OfficePunchPage({
     }),
     prisma.staffAttendance.findMany({
       where: { schoolId, date: { gte: start, lt: end } },
-      select: { staffId: true, checkIn: true, checkOut: true, status: true },
+      select: { staffId: true, date: true, checkIn: true, checkOut: true, status: true },
       orderBy: { date: 'desc' },
     }),
     prisma.staffAttendance.findFirst({
