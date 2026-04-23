@@ -25,6 +25,7 @@ import {
   Globe,
   Clock,
   CalendarDays,
+  ImageIcon,
 } from 'lucide-react'
 
 type Portal = 'owner' | 'teacher' | 'admin' | 'superadmin'
@@ -90,6 +91,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Punch In / Out', href: '/classroom/punch', icon: Clock },
     { label: 'Attendance', href: '/classroom/attendance', icon: CalendarCheck },
     { label: 'Homework', href: '/classroom/homework', icon: BookOpen },
+    { label: 'Class Events', href: '/classroom/events', icon: ImageIcon },
     { label: 'Leaves', href: '/classroom/leaves', icon: CalendarDays },
     { label: 'Parents', href: '/classroom/parents', icon: MessageSquare },
     { label: 'Reports', href: '/classroom/reports', icon: FileText },
@@ -104,6 +106,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Attendance', href: '/office/attendance', icon: CalendarCheck },
     { label: 'Admissions', href: '/office/admissions', icon: UserPlus },
     { label: 'Announcements', href: '/office/announcements', icon: Megaphone },
+    { label: 'School Events', href: '/office/events', icon: ImageIcon },
     { label: 'School website', href: '/office/website', icon: Globe },
   ],
   superadmin: [
