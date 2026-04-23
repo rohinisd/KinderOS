@@ -12,7 +12,6 @@ export const dynamic = 'force-dynamic'
 
 const ALL_STAFF_ATTENDANCE_ROLES = new Set(['OWNER', 'PRINCIPAL', 'ADMIN'])
 const STATUS_FILTERS = new Set(['all', 'punched_in', 'punched_out', 'not_marked'] as const)
-const PERIOD_FILTERS = new Set(['day', 'week', 'month'] as const)
 
 function todayIsoDate(): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -39,9 +38,11 @@ function parseStatusFilter(raw: string | undefined): 'all' | 'punched_in' | 'pun
 
 function parsePeriodFilter(raw: string | undefined): 'day' | 'week' | 'month' {
   if (!raw) return 'day'
-  return PERIOD_FILTERS.has(raw as 'day' | 'week' | 'month')
-    ? (raw as 'day' | 'week' | 'month')
-    : 'day'
+  const normalized = raw.trim().toLowerCase()
+  if (normalized === 'day' || normalized === 'daily') return 'day'
+  if (normalized === 'week' || normalized === 'weekly') return 'week'
+  if (normalized === 'month' || normalized === 'monthly') return 'month'
+  return 'day'
 }
 
 function utcRangeForPeriod(isoDate: string, period: 'day' | 'week' | 'month'): { start: Date; end: Date; dayCount: number } {
@@ -250,6 +251,11 @@ export default async function OfficePunchPage({
           <CardDescription>
             {canViewAll ? 'Owner/Admin/Principal can filter by date and status' : 'Your daily attendance view'}
           </CardDescription>
+          {canViewAll ? (
+            <div className="text-xs text-muted-foreground">
+              Active view: {selectedPeriod === 'day' ? 'Daily' : selectedPeriod === 'week' ? 'Weekly' : 'Monthly'}
+            </div>
+          ) : null}
         </CardHeader>
         <CardContent className="space-y-4">
           {canViewAll ? (
@@ -272,9 +278,9 @@ export default async function OfficePunchPage({
                   defaultValue={selectedPeriod}
                   className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="day">Daily</option>
-                  <option value="week">Weekly</option>
-                  <option value="month">Monthly</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
                 </select>
               </div>
               <div className="space-y-1">
