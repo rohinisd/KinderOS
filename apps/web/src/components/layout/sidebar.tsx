@@ -93,6 +93,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Homework', href: '/classroom/homework', icon: BookOpen },
     { label: 'Class Events', href: '/classroom/events', icon: ImageIcon },
     { label: 'Leaves', href: '/classroom/leaves', icon: CalendarDays },
+    { label: 'Student Leaves', href: '/classroom/student-leaves', icon: CalendarDays },
     { label: 'Parents', href: '/classroom/parents', icon: MessageSquare },
     { label: 'Reports', href: '/classroom/reports', icon: FileText },
   ],

@@ -79,6 +79,7 @@ model School {
   events       Event[]
   routes       TransportRoute[]
   academicYears AcademicYear[]
+  studentLeaveRequests StudentLeaveRequest[]
 
   @@index([clerkOrgId])
   @@index([slug])
@@ -131,6 +132,7 @@ model Class {
   students       Student[]
   timetableSlots TimetableSlot[]
   assignments    Assignment[]
+  leaveRequests  StudentLeaveRequest[]
 
   @@index([schoolId])
   @@map("classes")
@@ -173,6 +175,7 @@ model Student {
   route           TransportRoute? @relation(fields: [routeId], references: [id])
   parents         Parent[]
   attendance      StudentAttendance[]
+  leaveRequests   StudentLeaveRequest[]
   feeInvoices     FeeInvoice[]
   progressReports ProgressReport[]
   assignmentSubmissions AssignmentSubmission[]
@@ -219,6 +222,7 @@ model Parent {
 
   students    Student[]
   payments    Payment[]
+  leaveRequests StudentLeaveRequest[]
 
   @@index([phone])
   @@map("parents")
@@ -271,6 +275,7 @@ model Staff {
   assignments Assignment[]
   progressReports ProgressReport[]
   leaves      LeaveRequest[]
+  reviewedStudentLeaves StudentLeaveRequest[] @relation("StudentLeaveReviewedBy")
   createdSpotlights  SchoolSpotlight[] @relation("SchoolSpotlightCreator")
   reviewedSpotlights SchoolSpotlight[] @relation("SchoolSpotlightReviewer")
 
@@ -809,6 +814,41 @@ enum LeaveType {
 }
 
 enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model StudentLeaveRequest {
+  id          String            @id @default(cuid())
+  schoolId    String
+  classId     String
+  studentId   String
+  parentId    String
+  startDate   DateTime
+  endDate     DateTime
+  reason      String
+  status      StudentLeaveStatus @default(PENDING)
+  reviewedById String?
+  reviewedAt  DateTime?
+  note        String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  school      School            @relation(fields: [schoolId], references: [id])
+  class       Class             @relation(fields: [classId], references: [id])
+  student     Student           @relation(fields: [studentId], references: [id])
+  parent      Parent            @relation(fields: [parentId], references: [id])
+  reviewedBy  Staff?            @relation("StudentLeaveReviewedBy", fields: [reviewedById], references: [id])
+
+  @@index([schoolId, classId, status])
+  @@index([studentId, startDate])
+  @@index([parentId, createdAt])
+  @@map("student_leave_requests")
+}
+
+enum StudentLeaveStatus {
   PENDING
   APPROVED
   REJECTED

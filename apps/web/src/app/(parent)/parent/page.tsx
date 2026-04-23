@@ -7,7 +7,7 @@ import { formatCurrency, toIST } from '@kinderos/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BookOpen, ImageIcon } from 'lucide-react'
+import { BookOpen, CalendarDays, ImageIcon } from 'lucide-react'
 import type { AttendanceStatus, Prisma } from '@kinderos/db'
 
 export const dynamic = 'force-dynamic'
@@ -112,7 +112,7 @@ export default async function ParentDashboard() {
     })
   }
 
-  const [attendanceToday, announcements, pendingFees, recentHomework, recentAlbums] = await Promise.all([
+  const [attendanceToday, announcements, pendingFees, recentHomework, recentAlbums, pendingStudentLeaves] = await Promise.all([
     prisma.studentAttendance.findMany({
       where: { studentId: { in: childIds }, date: todayAt },
       select: { studentId: true, status: true },
@@ -165,6 +165,13 @@ export default async function ParentDashboard() {
         description: true,
         eventDate: true,
         classIds: true,
+      },
+    }),
+    prisma.studentLeaveRequest.count({
+      where: {
+        schoolId: user.schoolId,
+        parentId: user.parentId,
+        status: 'PENDING',
       },
     }),
   ])
@@ -294,6 +301,12 @@ export default async function ParentDashboard() {
               <Link href="/parent/homework">
                 <BookOpen className="mr-2 h-4 w-4" />
                 View full homework history
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/parent/leaves">
+                <CalendarDays className="mr-2 h-4 w-4" />
+                Apply leave for child {pendingStudentLeaves > 0 ? `(${pendingStudentLeaves} pending)` : ''}
               </Link>
             </Button>
           </CardContent>

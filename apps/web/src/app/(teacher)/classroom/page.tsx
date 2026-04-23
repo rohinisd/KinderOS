@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Users, CalendarCheck, UserX, ClipboardList, Megaphone, Clock } from 'lucide-react'
+import { Users, CalendarCheck, UserX, ClipboardList, Megaphone, Clock, CalendarDays } from 'lucide-react'
 import { toIST } from '@kinderos/utils'
 import Link from 'next/link'
 
@@ -63,7 +63,7 @@ export default async function ClassroomPage() {
   const dayEnd = new Date(dayStart)
   dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)
 
-  const [todayAttendance, recentAnnouncements, pendingHomeworkCount] = await Promise.all([
+  const [todayAttendance, recentAnnouncements, pendingHomeworkCount, pendingStudentLeaveCount] = await Promise.all([
     prisma.studentAttendance.findMany({
       where: {
         schoolId,
@@ -90,6 +90,13 @@ export default async function ClassroomPage() {
         schoolId,
         classId: teacherClass.id,
         dueDate: { gte: dayStart },
+      },
+    }),
+    prisma.studentLeaveRequest.count({
+      where: {
+        schoolId,
+        classId: teacherClass.id,
+        status: 'PENDING',
       },
     }),
   ])
@@ -123,6 +130,12 @@ export default async function ClassroomPage() {
       icon: ClipboardList,
       color: 'text-amber-600 bg-amber-50',
     },
+    {
+      label: 'Pending leave requests',
+      value: pendingStudentLeaveCount,
+      icon: CalendarDays,
+      color: 'text-purple-600 bg-purple-50',
+    },
   ]
 
   return (
@@ -132,7 +145,7 @@ export default async function ClassroomPage() {
         description={`Welcome, ${teacherName} — ${teacherClass.name}${teacherClass.section ? ` · ${teacherClass.section}` : ''}`}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-6">
@@ -151,6 +164,25 @@ export default async function ClassroomPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarDays className="h-4 w-4" />
+              Student leave requests
+            </CardTitle>
+            <Link href="/classroom/student-leaves" className="text-sm text-primary hover:underline">
+              Review now
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {pendingStudentLeaveCount > 0
+                ? `${pendingStudentLeaveCount} leave request(s) pending your review.`
+                : 'No pending leave requests right now.'}
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
