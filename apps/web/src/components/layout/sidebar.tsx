@@ -23,6 +23,8 @@ import {
   CreditCard,
   ToggleLeft,
   Globe,
+  Clock,
+  CalendarDays,
 } from 'lucide-react'
 
 type Portal = 'owner' | 'teacher' | 'admin' | 'superadmin'
@@ -85,14 +87,18 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
   ],
   teacher: [
     { label: 'My Classroom', href: '/classroom', icon: LayoutDashboard },
+    { label: 'Punch In / Out', href: '/classroom/punch', icon: Clock },
     { label: 'Attendance', href: '/classroom/attendance', icon: CalendarCheck },
     { label: 'Homework', href: '/classroom/homework', icon: BookOpen },
+    { label: 'Leaves', href: '/classroom/leaves', icon: CalendarDays },
     { label: 'Parents', href: '/classroom/parents', icon: MessageSquare },
     { label: 'Reports', href: '/classroom/reports', icon: FileText },
   ],
   admin: [
     { label: 'Students', href: '/office/students', icon: Users },
+    { label: 'Staff Punch', href: '/office/punch', icon: Clock },
     { label: 'Staff', href: '/office/staff', icon: GraduationCap },
+    { label: 'Leaves', href: '/office/leaves', icon: CalendarDays },
     { label: 'Fee Collection', href: '/office/fees', icon: IndianRupee },
     { label: 'Receipts', href: '/office/receipts', icon: Receipt },
     { label: 'Attendance', href: '/office/attendance', icon: CalendarCheck },
