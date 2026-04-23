@@ -104,13 +104,13 @@ export function PlatformMarketing() {
           </Link>
           <Link
             href="/sign-in?redirect_url=/office/students"
-            className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            className="rounded-lg bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
           >
             Staff sign in
           </Link>
           <Link
             href="/sign-in?redirect_url=/parent"
-            className="rounded-lg border border-brand-200 bg-brand-50 px-6 py-3 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+            className="rounded-lg bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
           >
             Parent sign in
           </Link>
