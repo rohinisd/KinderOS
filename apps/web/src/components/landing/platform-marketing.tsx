@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { InstallAppButton } from '@/components/pwa/install-app-button'
 import {
   GraduationCap,
   Users,
@@ -67,6 +68,7 @@ export function PlatformMarketing() {
             <span className="text-lg font-bold text-slate-900">SchoolOS</span>
           </div>
           <div className="flex items-center gap-3">
+            <InstallAppButton />
             <Link
               href="/sign-in"
               className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"

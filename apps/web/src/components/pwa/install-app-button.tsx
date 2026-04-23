@@ -57,8 +57,8 @@ export function InstallAppButton() {
 
   const showButton = useMemo(() => {
     if (!mounted || isStandalone) return false
-    return Boolean(deferredPrompt) || isIosSafari()
-  }, [mounted, isStandalone, deferredPrompt])
+    return true
+  }, [mounted, isStandalone])
 
   async function onInstallClick() {
     if (deferredPrompt) {
@@ -75,7 +75,10 @@ export function InstallAppButton() {
 
     if (isIosSafari()) {
       toast.message('To install on iPhone: Share -> Add to Home Screen')
+      return
     }
+
+    toast.message('To install: open browser menu and select "Install app" or "Add to Home screen".')
   }
 
   if (!showButton) return null
