@@ -63,7 +63,7 @@ export default async function ClassroomPage() {
   const dayEnd = new Date(dayStart)
   dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)
 
-  const [todayAttendance, recentAnnouncements] = await Promise.all([
+  const [todayAttendance, recentAnnouncements, pendingHomeworkCount] = await Promise.all([
     prisma.studentAttendance.findMany({
       where: {
         schoolId,
@@ -83,6 +83,13 @@ export default async function ClassroomPage() {
         body: true,
         status: true,
         publishedAt: true,
+      },
+    }),
+    prisma.assignment.count({
+      where: {
+        schoolId,
+        classId: teacherClass.id,
+        dueDate: { gte: dayStart },
       },
     }),
   ])
@@ -111,8 +118,8 @@ export default async function ClassroomPage() {
       color: 'text-red-600 bg-red-50',
     },
     {
-      label: 'Pending assignments',
-      value: 0,
+      label: 'Pending homework',
+      value: pendingHomeworkCount,
       icon: ClipboardList,
       color: 'text-amber-600 bg-amber-50',
     },

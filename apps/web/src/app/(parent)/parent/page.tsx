@@ -203,6 +203,9 @@ export default async function ParentDashboard() {
             <Button asChild variant="secondary" className="bg-white/90 text-rose-900 hover:bg-white">
               <Link href="/parent/fees">View fee details</Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link href="/parent/homework">View homework</Link>
+            </Button>
           </CardContent>
         </Card>
 

@@ -86,7 +86,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
   teacher: [
     { label: 'My Classroom', href: '/classroom', icon: LayoutDashboard },
     { label: 'Attendance', href: '/classroom/attendance', icon: CalendarCheck },
-    { label: 'Assignments', href: '/classroom/assignments', icon: BookOpen },
+    { label: 'Homework', href: '/classroom/homework', icon: BookOpen },
     { label: 'Parents', href: '/classroom/parents', icon: MessageSquare },
     { label: 'Reports', href: '/classroom/reports', icon: FileText },
   ],
