@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { AppPortal, OfficePortalVariant } from '@/lib/portal-variants'
 import { badgeForAppPortal } from '@/lib/portal-badges'
+import { InstallAppButton } from '@/components/pwa/install-app-button'
 
 export type { AppPortal, OfficePortalVariant } from '@/lib/portal-variants'
 
@@ -40,6 +41,7 @@ export function TopBar({
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
+        <InstallAppButton />
         <button type="button" className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100">
           <Bell className="h-5 w-5" />
         </button>
