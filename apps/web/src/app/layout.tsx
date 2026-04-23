@@ -11,16 +11,16 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'KinderOS — School Management Platform',
+  title: 'SchoolOS — School Management Platform',
   description:
     'Multi-tenant SaaS platform for kindergarten schools in India. Manage students, fees, attendance, and more.',
   keywords: ['kindergarten', 'school management', 'India', 'SaaS'],
   manifest: '/manifest.webmanifest',
-  applicationName: 'KinderOS',
+  applicationName: 'SchoolOS',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'KinderOS',
+    title: 'SchoolOS',
   },
   icons: {
     icon: '/icon.svg',

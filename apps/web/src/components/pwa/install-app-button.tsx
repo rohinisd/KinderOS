@@ -43,7 +43,7 @@ export function InstallAppButton() {
     const onInstalled = () => {
       setDeferredPrompt(null)
       setIsStandalone(true)
-      toast.success('KinderOS installed successfully')
+      toast.success('SchoolOS installed successfully')
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)

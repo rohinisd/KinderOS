@@ -64,7 +64,7 @@ export function PlatformMarketing() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">
               K
             </div>
-            <span className="text-lg font-bold text-slate-900">KinderOS</span>
+            <span className="text-lg font-bold text-slate-900">SchoolOS</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -92,7 +92,7 @@ export function PlatformMarketing() {
           Run your school like a <span className="text-brand-600">modern institution</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-500">
-          KinderOS is the multi-tenant platform for fees, admissions, attendance, parent communication, and a
+          SchoolOS is the multi-tenant platform for fees, admissions, attendance, parent communication, and a
           beautiful public website for each school — all from one dashboard.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -186,7 +186,7 @@ export function PlatformMarketing() {
             href="/sign-in"
             className="inline-block rounded-lg bg-white px-8 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50"
           >
-            Sign in to KinderOS
+            Sign in to SchoolOS
           </Link>
         </div>
       </section>
@@ -197,9 +197,9 @@ export function PlatformMarketing() {
             <div className="flex h-6 w-6 items-center justify-center rounded bg-brand-500 text-xs font-bold text-white">
               K
             </div>
-            <span className="font-medium text-slate-700">KinderOS</span>
+            <span className="font-medium text-slate-700">SchoolOS</span>
           </div>
-          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} KinderOS. School management for India.</p>
+          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} SchoolOS. School management for India.</p>
         </div>
       </footer>
     </div>

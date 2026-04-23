@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'KinderOS',
-    short_name: 'KinderOS',
+    name: 'SchoolOS',
+    short_name: 'SchoolOS',
     description:
       'School management platform for kindergarten schools: students, attendance, homework, communication, and operations.',
     start_url: '/',

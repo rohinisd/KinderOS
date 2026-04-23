@@ -1,5 +1,5 @@
 /**
- * Hosts that show the KinderOS SaaS marketing home — not a school custom domain.
+ * Hosts that show the SchoolOS SaaS marketing home — not a school custom domain.
  * Set PLATFORM_HOSTS in Vercel (comma-separated), e.g. `kinderos.vercel.app,www.kinderos.in`
  */
 export function normalizeHost(host: string): string {

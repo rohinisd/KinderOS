@@ -119,7 +119,7 @@ export function SchoolPublicLanding({ school, basePath }: { school: SchoolPublic
 
       <footer className="border-t px-6 py-8 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} {school.name}</p>
-        <p className="mt-1 text-xs">Powered by KinderOS</p>
+        <p className="mt-1 text-xs">Powered by SchoolOS</p>
       </footer>
     </div>
   )

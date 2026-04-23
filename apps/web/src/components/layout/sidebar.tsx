@@ -149,7 +149,7 @@ export function Sidebar({
           >
             K
           </div>
-          <span className="text-lg font-semibold">KinderOS</span>
+          <span className="text-lg font-semibold">SchoolOS</span>
         </Link>
       </div>
 
