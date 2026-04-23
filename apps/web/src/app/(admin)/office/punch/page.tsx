@@ -110,6 +110,22 @@ function weekDays(start: Date): Array<{ key: string; label: string }> {
   })
 }
 
+function monthDays(start: Date, end: Date): Array<{ key: string; label: string }> {
+  const days: Array<{ key: string; label: string }> = []
+  const cursor = new Date(start)
+  while (cursor < end) {
+    days.push({
+      key: dayKey(cursor),
+      label: cursor.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        timeZone: 'UTC',
+      }),
+    })
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+  return days
+}
+
 type SearchParams = Promise<{ date?: string | string[]; status?: string | string[]; period?: string | string[] }>
 
 export default async function OfficePunchPage({
@@ -129,7 +145,12 @@ export default async function OfficePunchPage({
   const selectedStatus = parseStatusFilter(rawStatus)
   const selectedPeriod = parsePeriodFilter(rawPeriod)
   const { start, end, dayCount } = utcRangeForPeriod(selectedDate, selectedPeriod)
-  const weekColumns = selectedPeriod === 'week' ? weekDays(start) : []
+  const periodColumns =
+    selectedPeriod === 'week'
+      ? weekDays(start)
+      : selectedPeriod === 'month'
+        ? monthDays(start, end)
+        : []
   const today = istDayRange(todayIsoDate())
 
   const [staffRows, periodRecords, myTodayRecord] = await Promise.all([
@@ -196,7 +217,7 @@ export default async function OfficePunchPage({
       punchedOutDays,
       notMarkedDays,
       workedMinutes,
-      weekStatuses: weekColumns.map((d) => byDay.get(d.key) ?? 'NOT_MARKED'),
+      periodStatuses: periodColumns.map((d) => byDay.get(d.key) ?? 'NOT_MARKED'),
     }
   })
 
@@ -286,18 +307,11 @@ export default async function OfficePunchPage({
                       <TableHead>Check In</TableHead>
                       <TableHead>Check Out</TableHead>
                     </>
-                  ) : selectedPeriod === 'week' ? (
-                    <>
-                      {weekColumns.map((d) => (
-                        <TableHead key={d.key}>{d.label}</TableHead>
-                      ))}
-                      <TableHead>Total Hours</TableHead>
-                    </>
                   ) : (
                     <>
-                      <TableHead>Punched In Days</TableHead>
-                      <TableHead>Punched Out Days</TableHead>
-                      <TableHead>Not Marked Days</TableHead>
+                      {periodColumns.map((d) => (
+                        <TableHead key={d.key}>{d.label}</TableHead>
+                      ))}
                       <TableHead>Total Hours</TableHead>
                     </>
                   )}
@@ -306,7 +320,7 @@ export default async function OfficePunchPage({
               <TableBody>
                 {filteredRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={selectedPeriod === 'day' ? 5 : selectedPeriod === 'week' ? 10 : 6} className="h-20 text-center text-muted-foreground">
+                    <TableCell colSpan={selectedPeriod === 'day' ? 5 : periodColumns.length + 3} className="h-20 text-center text-muted-foreground">
                       No attendance records for selected filters.
                     </TableCell>
                   </TableRow>
@@ -325,22 +339,15 @@ export default async function OfficePunchPage({
                           <TableCell>{formatTs(row.checkIn)}</TableCell>
                           <TableCell>{formatTs(row.checkOut)}</TableCell>
                         </>
-                      ) : selectedPeriod === 'week' ? (
+                      ) : (
                         <>
-                          {row.weekStatuses.map((s: 'PUNCHED_IN' | 'PUNCHED_OUT' | 'NOT_MARKED', idx: number) => (
+                          {row.periodStatuses.map((s: 'PUNCHED_IN' | 'PUNCHED_OUT' | 'NOT_MARKED', idx: number) => (
                             <TableCell key={`${row.id}-${idx}`}>
                               <Badge variant={s === 'PUNCHED_OUT' ? 'success' : s === 'PUNCHED_IN' ? 'warning' : 'secondary'}>
                                 {s === 'PUNCHED_OUT' ? 'Out' : s === 'PUNCHED_IN' ? 'In' : '—'}
                               </Badge>
                             </TableCell>
                           ))}
-                          <TableCell>{(row.workedMinutes / 60).toFixed(1)}h</TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell>{row.punchedInDays}</TableCell>
-                          <TableCell>{row.punchedOutDays}</TableCell>
-                          <TableCell>{row.notMarkedDays}</TableCell>
                           <TableCell>{(row.workedMinutes / 60).toFixed(1)}h</TableCell>
                         </>
                       )}
