@@ -108,10 +108,16 @@ export function PlatformMarketing() {
           >
             Staff sign in
           </Link>
+          <Link
+            href="/sign-in?redirect_url=/parent"
+            className="rounded-lg border border-brand-200 bg-brand-50 px-6 py-3 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+          >
+            Parent sign in
+          </Link>
         </div>
         <p className="mx-auto mt-6 max-w-md text-xs text-slate-400">
           Staff access is invite-only. Your platform administrator creates your school and assigns the owner;
-          the owner then invites teachers and office staff.
+          the owner then invites teachers and office staff. Parents sign in with the email linked on their child profile.
         </p>
       </section>
 
