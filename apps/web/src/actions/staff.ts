@@ -9,7 +9,9 @@ import { normalizePhone } from '@kinderos/utils'
 
 const StaffAssignableRole = z.enum([
   'PRINCIPAL', 'CLASS_TEACHER', 'SUBJECT_TEACHER',
-  'ADMIN', 'ACCOUNTANT', 'SUPPORT_STAFF', 'DRIVER',
+  'VICE_PRINCIPAL', 'COORDINATOR',
+  'ADMIN', 'ACCOUNTANT', 'COUNSELOR', 'LIBRARIAN', 'NURSE', 'RECEPTIONIST',
+  'SUPPORT_STAFF', 'SECURITY_GUARD', 'DRIVER', 'TRANSPORT_MANAGER',
 ])
 
 const StaffSchema = z.object({

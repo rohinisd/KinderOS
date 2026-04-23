@@ -56,9 +56,17 @@ export function badgeForSchoolRole(role: string | null): PortalBadge | null {
     case 'ADMIN':
       return OFFICE.admin
     case 'PRINCIPAL':
+    case 'VICE_PRINCIPAL':
+    case 'COORDINATOR':
     case 'ACCOUNTANT':
+    case 'COUNSELOR':
+    case 'LIBRARIAN':
+    case 'NURSE':
+    case 'RECEPTIONIST':
     case 'SUPPORT_STAFF':
+    case 'SECURITY_GUARD':
     case 'DRIVER':
+    case 'TRANSPORT_MANAGER':
       return OFFICE.staff
     case 'CLASS_TEACHER':
     case 'SUBJECT_TEACHER':

@@ -11,10 +11,18 @@ export const dynamic = 'force-dynamic'
 const OFFICE_ACCESS_ROLES = [
   'OWNER',
   'PRINCIPAL',
+  'VICE_PRINCIPAL',
+  'COORDINATOR',
   'ADMIN',
   'ACCOUNTANT',
+  'COUNSELOR',
+  'LIBRARIAN',
+  'NURSE',
+  'RECEPTIONIST',
   'SUPPORT_STAFF',
+  'SECURITY_GUARD',
   'DRIVER',
+  'TRANSPORT_MANAGER',
   'CLASS_TEACHER',
   'SUBJECT_TEACHER',
 ] as const

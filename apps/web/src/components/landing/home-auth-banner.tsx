@@ -7,12 +7,20 @@ const ROLE_PORTAL: Record<string, { href: string; label: string }> = {
   OWNER: { href: '/dashboard', label: 'Owner dashboard' },
   /** Principal cannot use owner-only `/dashboard` layout — send to office. */
   PRINCIPAL: { href: '/office/students', label: 'Staff office' },
+  VICE_PRINCIPAL: { href: '/office/students', label: 'Staff office' },
   CLASS_TEACHER: { href: '/classroom', label: 'Classroom' },
   SUBJECT_TEACHER: { href: '/classroom', label: 'Classroom' },
+  COORDINATOR: { href: '/office/students', label: 'Staff office' },
   ADMIN: { href: '/office/students', label: 'Staff office' },
   ACCOUNTANT: { href: '/office/fees', label: 'Staff office' },
+  COUNSELOR: { href: '/office/students', label: 'Staff office' },
+  LIBRARIAN: { href: '/office/students', label: 'Staff office' },
+  NURSE: { href: '/office/students', label: 'Staff office' },
+  RECEPTIONIST: { href: '/office/students', label: 'Staff office' },
   SUPPORT_STAFF: { href: '/office/fees', label: 'Staff office' },
+  SECURITY_GUARD: { href: '/office/students', label: 'Staff office' },
   DRIVER: { href: '/office/fees', label: 'Staff office' },
+  TRANSPORT_MANAGER: { href: '/office/students', label: 'Staff office' },
 }
 
 export function HomeAuthBanner({

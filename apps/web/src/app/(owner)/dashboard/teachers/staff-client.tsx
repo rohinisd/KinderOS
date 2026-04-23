@@ -42,35 +42,61 @@ type StaffMember = {
 const ALL_ROLES = [
   { value: 'OWNER', label: 'Owner' },
   { value: 'PRINCIPAL', label: 'Principal' },
+  { value: 'VICE_PRINCIPAL', label: 'Vice Principal' },
   { value: 'CLASS_TEACHER', label: 'Class Teacher' },
   { value: 'SUBJECT_TEACHER', label: 'Subject Teacher' },
+  { value: 'COORDINATOR', label: 'Academic Coordinator' },
   { value: 'ADMIN', label: 'Admin' },
   { value: 'ACCOUNTANT', label: 'Accountant' },
+  { value: 'COUNSELOR', label: 'Counselor' },
+  { value: 'LIBRARIAN', label: 'Librarian' },
+  { value: 'NURSE', label: 'Nurse / Medical' },
+  { value: 'RECEPTIONIST', label: 'Receptionist' },
   { value: 'SUPPORT_STAFF', label: 'Support Staff' },
+  { value: 'SECURITY_GUARD', label: 'Security Guard' },
   { value: 'DRIVER', label: 'Driver' },
+  { value: 'TRANSPORT_MANAGER', label: 'Transport Manager' },
 ]
+
+const CUSTOM_ROLE_VALUE = 'CUSTOM_ROLE'
 
 /** Owner is provisioned by platform admin only — never assign via this form. */
 const ASSIGNABLE_ROLES = ALL_ROLES.filter((r) => r.value !== 'OWNER')
 
 type StaffAssignableRole =
   | 'PRINCIPAL'
+  | 'VICE_PRINCIPAL'
   | 'CLASS_TEACHER'
   | 'SUBJECT_TEACHER'
+  | 'COORDINATOR'
   | 'ADMIN'
   | 'ACCOUNTANT'
+  | 'COUNSELOR'
+  | 'LIBRARIAN'
+  | 'NURSE'
+  | 'RECEPTIONIST'
   | 'SUPPORT_STAFF'
+  | 'SECURITY_GUARD'
   | 'DRIVER'
+  | 'TRANSPORT_MANAGER'
 
 const roleColors: Record<string, 'default' | 'secondary' | 'info' | 'warning' | 'success'> = {
   OWNER: 'default',
   PRINCIPAL: 'default',
+  VICE_PRINCIPAL: 'default',
   CLASS_TEACHER: 'info' as 'default',
   SUBJECT_TEACHER: 'info' as 'default',
+  COORDINATOR: 'default',
   ADMIN: 'secondary',
   ACCOUNTANT: 'secondary',
+  COUNSELOR: 'secondary',
+  LIBRARIAN: 'secondary',
+  NURSE: 'secondary',
+  RECEPTIONIST: 'secondary',
   SUPPORT_STAFF: 'warning' as 'secondary',
+  SECURITY_GUARD: 'warning' as 'secondary',
   DRIVER: 'warning' as 'secondary',
+  TRANSPORT_MANAGER: 'warning' as 'secondary',
 }
 
 export function StaffClient({ staff }: { staff: StaffMember[] }) {
@@ -78,8 +104,29 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<StaffMember | null>(null)
+  const [selectedRole, setSelectedRole] = useState<StaffAssignableRole | typeof CUSTOM_ROLE_VALUE>('CLASS_TEACHER')
+  const [customRoleTitle, setCustomRoleTitle] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  function openCreate() {
+    setEditing(null)
+    setSelectedRole('CLASS_TEACHER')
+    setCustomRoleTitle('')
+    setSheetOpen(true)
+  }
+
+  function openEdit(staffMember: StaffMember) {
+    setEditing(staffMember)
+    if (staffMember.role === 'SUPPORT_STAFF' && staffMember.designation) {
+      setSelectedRole(CUSTOM_ROLE_VALUE)
+      setCustomRoleTitle(staffMember.designation)
+    } else {
+      setSelectedRole(staffMember.role as StaffAssignableRole)
+      setCustomRoleTitle('')
+    }
+    setSheetOpen(true)
+  }
 
   const filtered = staff.filter((s) => {
     const matchesSearch = `${s.firstName} ${s.lastName} ${s.email ?? ''} ${s.phone}`
@@ -94,13 +141,25 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
     const form = new FormData(e.currentTarget)
 
     startTransition(async () => {
+      const rawRole = form.get('role') as string
+      const customRole = (form.get('customRoleTitle') as string | null)?.trim() ?? ''
+      const role: StaffAssignableRole =
+        rawRole === CUSTOM_ROLE_VALUE ? 'SUPPORT_STAFF' : (rawRole as StaffAssignableRole)
+      const designationFromForm = (form.get('designation') as string) || undefined
+      const designation = rawRole === CUSTOM_ROLE_VALUE ? (customRole || undefined) : designationFromForm
+
+      if (rawRole === CUSTOM_ROLE_VALUE && !customRole) {
+        toast.error('Please enter a custom role title')
+        return
+      }
+
       if (editing) {
         const base = {
           firstName: form.get('firstName') as string,
           lastName: form.get('lastName') as string,
           phone: form.get('phone') as string,
           email: (form.get('email') as string) || undefined,
-          designation: (form.get('designation') as string) || undefined,
+          designation,
           department: (form.get('department') as string) || undefined,
           gender: form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER',
         }
@@ -109,7 +168,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
             ? base
             : {
                 ...base,
-                role: form.get('role') as StaffAssignableRole,
+                role,
               }
         const result = await updateStaff(editing.id, payload)
         if (result.success) {
@@ -124,8 +183,8 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
           lastName: form.get('lastName') as string,
           phone: form.get('phone') as string,
           email: (form.get('email') as string) || undefined,
-          role: form.get('role') as StaffAssignableRole,
-          designation: (form.get('designation') as string) || undefined,
+          role,
+          designation,
           department: (form.get('department') as string) || undefined,
           gender: (form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER') || 'OTHER',
         })
@@ -150,6 +209,13 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
       }
       setDeleteId(null)
     })
+  }
+
+  function roleLabelFor(member: StaffMember): string {
+    if (member.role === 'SUPPORT_STAFF' && member.designation && member.designation.trim().length > 0) {
+      return member.designation
+    }
+    return ALL_ROLES.find((r) => r.value === member.role)?.label ?? member.role
   }
 
   return (
@@ -177,7 +243,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => { setEditing(null); setSheetOpen(true) }}>
+        <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
           Add Staff
         </Button>
@@ -218,7 +284,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
                   </TableCell>
                   <TableCell>
                     <Badge variant={roleColors[s.role] ?? 'secondary'}>
-                      {ALL_ROLES.find((r) => r.value === s.role)?.label ?? s.role}
+                      {roleLabelFor(s)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -244,7 +310,7 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditing(s); setSheetOpen(true) }}>
+                        <DropdownMenuItem onClick={() => openEdit(s)}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                         {s.role !== 'OWNER' && (
@@ -287,16 +353,31 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
                   School owner (assigned when the school was created on the platform). Role cannot be changed here.
                 </p>
               ) : (
-                <Select name="role" defaultValue={editing?.role ?? 'CLASS_TEACHER'}>
+                <Select name="role" value={selectedRole} onValueChange={(v) => setSelectedRole(v as StaffAssignableRole | typeof CUSTOM_ROLE_VALUE)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ASSIGNABLE_ROLES.map((r) => (
                       <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                     ))}
+                    <SelectItem value={CUSTOM_ROLE_VALUE}>Other (Custom Role)</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             </div>
+
+            {editing?.role !== 'OWNER' && selectedRole === CUSTOM_ROLE_VALUE && (
+              <div className="space-y-1.5">
+                <Label htmlFor="customRoleTitle">Custom Role Title *</Label>
+                <Input
+                  id="customRoleTitle"
+                  name="customRoleTitle"
+                  required
+                  placeholder="e.g. Activity Coordinator, Speech Therapist"
+                  value={customRoleTitle}
+                  onChange={(e) => setCustomRoleTitle(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
