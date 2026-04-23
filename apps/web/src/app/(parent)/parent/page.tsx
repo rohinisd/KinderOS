@@ -7,6 +7,7 @@ import { formatCurrency, toIST } from '@kinderos/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { BookOpen, ImageIcon } from 'lucide-react'
 import type { AttendanceStatus, Prisma } from '@kinderos/db'
 
 export const dynamic = 'force-dynamic'
@@ -111,7 +112,7 @@ export default async function ParentDashboard() {
     })
   }
 
-  const [attendanceToday, announcements, pendingFees] = await Promise.all([
+  const [attendanceToday, announcements, pendingFees, recentHomework, recentAlbums] = await Promise.all([
     prisma.studentAttendance.findMany({
       where: { studentId: { in: childIds }, date: todayAt },
       select: { studentId: true, status: true },
@@ -134,6 +135,37 @@ export default async function ParentDashboard() {
         status: { in: [...PENDING_FEE_STATUSES] },
       },
       _sum: { totalAmount: true },
+    }),
+    prisma.assignment.findMany({
+      where: { schoolId: user.schoolId, classId: { in: childClassIds } },
+      orderBy: [{ dueDate: 'desc' }, { createdAt: 'desc' }],
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        subject: true,
+        dueDate: true,
+        classId: true,
+      },
+    }),
+    prisma.galleryAlbum.findMany({
+      where: {
+        schoolId: user.schoolId,
+        isPublic: true,
+        OR:
+          childClassIds.length > 0
+            ? [{ classIds: { isEmpty: true } }, { classIds: { hasSome: childClassIds } }]
+            : [{ classIds: { isEmpty: true } }],
+      },
+      orderBy: [{ eventDate: 'desc' }, { createdAt: 'desc' }],
+      take: 4,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        eventDate: true,
+        classIds: true,
+      },
     }),
   ])
 
@@ -203,9 +235,6 @@ export default async function ParentDashboard() {
             <Button asChild variant="secondary" className="bg-white/90 text-rose-900 hover:bg-white">
               <Link href="/parent/fees">View fee details</Link>
             </Button>
-            <Button asChild variant="outline">
-              <Link href="/parent/homework">View homework</Link>
-            </Button>
           </CardContent>
         </Card>
 
@@ -233,6 +262,79 @@ export default async function ParentDashboard() {
                 </div>
               ))
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="border-violet-100 bg-violet-50/40">
+          <CardHeader>
+            <CardTitle className="text-lg text-violet-950">Homework by subject</CardTitle>
+            <CardDescription className="text-violet-900/75">
+              Latest homework updates, grouped by each class subject
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recentHomework.length === 0 ? (
+              <p className="text-sm text-violet-900/70">No homework shared yet.</p>
+            ) : (
+              recentHomework.map((item) => (
+                <div key={item.id} className="rounded-lg border border-violet-100/80 bg-white/85 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-violet-950">{item.title}</span>
+                      <Badge variant="secondary">{item.subject}</Badge>
+                    </div>
+                    <span className="text-xs text-violet-800/80">{toIST(item.dueDate)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+            <Button asChild variant="outline">
+              <Link href="/parent/homework">
+                <BookOpen className="mr-2 h-4 w-4" />
+                View full homework history
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-orange-100 bg-orange-50/40">
+          <CardHeader>
+            <CardTitle className="text-lg text-orange-950">Class & school events</CardTitle>
+            <CardDescription className="text-orange-900/75">
+              Event stories shared by teachers and school admins
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recentAlbums.length === 0 ? (
+              <p className="text-sm text-orange-900/70">No event stories shared yet.</p>
+            ) : (
+              recentAlbums.map((album) => (
+                <div key={album.id} className="rounded-lg border border-orange-100/80 bg-white/85 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-orange-950">{album.title}</span>
+                      <Badge variant={album.classIds.length > 0 ? 'info' : 'secondary'}>
+                        {album.classIds.length > 0 ? 'Class event' : 'School event'}
+                      </Badge>
+                    </div>
+                    {album.eventDate ? (
+                      <span className="text-xs text-orange-800/80">{toIST(album.eventDate)}</span>
+                    ) : null}
+                  </div>
+                  {album.description ? (
+                    <p className="mt-2 line-clamp-2 text-sm text-orange-900/80">{album.description}</p>
+                  ) : null}
+                </div>
+              ))
+            )}
+            <Button asChild variant="outline">
+              <Link href="/parent/gallery">
+                <ImageIcon className="mr-2 h-4 w-4" />
+                View all event stories
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

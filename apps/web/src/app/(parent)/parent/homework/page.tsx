@@ -43,6 +43,15 @@ export default async function ParentHomeworkPage() {
       take: 100,
     })
 
+  const groupedByDate = new Map<string, typeof homeworkItems>()
+  for (const item of homeworkItems) {
+    const key = item.dueDate.toISOString().slice(0, 10)
+    const arr = groupedByDate.get(key) ?? []
+    arr.push(item)
+    groupedByDate.set(key, arr)
+  }
+  const groupedEntries = [...groupedByDate.entries()].sort(([a], [b]) => b.localeCompare(a))
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -63,31 +72,50 @@ export default async function ParentHomeworkPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Homework feed</CardTitle>
-          <CardDescription>Latest to oldest homework updates from school</CardDescription>
+          <CardTitle>Homework feed (day + subject wise)</CardTitle>
+          <CardDescription>
+            Includes previous days too, grouped by day and then by subject
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {homeworkItems.length === 0 ? (
+        <CardContent className="space-y-4">
+          {groupedEntries.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No homework found yet. Please check back later.
             </p>
           ) : (
-            homeworkItems.map((item) => (
-              <div key={item.id} className="rounded-lg border bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-gray-950">{item.title}</h3>
-                    <Badge variant="secondary">{item.subject}</Badge>
-                    <Badge variant="outline">{classesById.get(item.classId) ?? 'Class'}</Badge>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    Due {toIST(item.dueDate)}
-                  </span>
+            groupedEntries.map(([dateKey, items]) => (
+              <div key={dateKey} className="rounded-lg border bg-slate-50/60 p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {new Date(`${dateKey}T00:00:00.000Z`).toLocaleDateString('en-IN', {
+                      weekday: 'long',
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    })}
+                  </h3>
                 </div>
-                {item.description ? (
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{item.description}</p>
-                ) : null}
+                <div className="space-y-2">
+                  {items.map((item) => (
+                    <div key={item.id} className="rounded-md border bg-white p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-gray-950">{item.title}</span>
+                          <Badge variant="secondary">{item.subject}</Badge>
+                          <Badge variant="outline">{classesById.get(item.classId) ?? 'Class'}</Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Due {toIST(item.dueDate)}
+                        </span>
+                      </div>
+                      {item.description ? (
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{item.description}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))
           )}

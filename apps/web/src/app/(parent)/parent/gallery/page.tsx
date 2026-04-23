@@ -90,15 +90,25 @@ export default async function GalleryPage() {
                 )}
               </div>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-orange-950">{album.title}</CardTitle>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="text-lg text-orange-950">{album.title}</CardTitle>
+                  <Badge variant={album.classIds.length > 0 ? 'info' : 'secondary'}>
+                    {album.classIds.length > 0 ? 'Class event' : 'School event'}
+                  </Badge>
+                </div>
                 <CardDescription className="text-orange-900/70">
                   {album._count.photos === 1 ? '1 photo' : `${album._count.photos} photos`}
+                  {album.eventDate ? ` · ${new Date(album.eventDate).toLocaleDateString('en-IN')}` : ''}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-xs text-muted-foreground">
-                  Shared by {user.school.name} — thank you for being part of our community.
-                </p>
+                {album.description ? (
+                  <p className="line-clamp-2 text-sm text-muted-foreground">{album.description}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Shared by {user.school.name} — thank you for being part of our community.
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}
