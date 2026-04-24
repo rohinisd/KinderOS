@@ -3,6 +3,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 
 type BeforeInstallPromptEvent = Event & {
@@ -30,6 +38,7 @@ export function InstallAppButton() {
   const [mounted, setMounted] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -74,19 +83,52 @@ export function InstallAppButton() {
     }
 
     if (isIosSafari()) {
-      toast.message('To install on iPhone: Share -> Add to Home Screen')
+      setHelpOpen(true)
       return
     }
 
-    toast.message('To install: open browser menu and select "Install app" or "Add to Home screen".')
+    setHelpOpen(true)
   }
 
   if (!showButton) return null
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={onInstallClick} className="h-9">
-      <Download className="mr-2 h-4 w-4" />
-      Install App
-    </Button>
+    <>
+      <Button type="button" variant="outline" size="sm" onClick={onInstallClick} className="h-9">
+        <Download className="mr-2 h-4 w-4" />
+        Install App
+      </Button>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Install SchoolOS</DialogTitle>
+            <DialogDescription>
+              Browser install popup can be hidden. Use these manual steps.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            {isIosSafari() ? (
+              <ol className="list-decimal space-y-1.5 pl-5">
+                <li>Open Safari share menu.</li>
+                <li>Select <strong>Add to Home Screen</strong>.</li>
+                <li>Tap <strong>Add</strong>.</li>
+              </ol>
+            ) : (
+              <ol className="list-decimal space-y-1.5 pl-5">
+                <li>Open browser menu (three dots).</li>
+                <li>Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+                <li>Confirm install.</li>
+              </ol>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => setHelpOpen(false)}>
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
