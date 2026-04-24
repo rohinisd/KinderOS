@@ -11,16 +11,16 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'SchoolOS — School Management Platform',
+  title: 'VidyaPrabandha — School Management Platform',
   description:
     'Multi-tenant SaaS platform for kindergarten schools in India. Manage students, fees, attendance, and more.',
   keywords: ['kindergarten', 'school management', 'India', 'SaaS'],
   manifest: '/manifest.webmanifest',
-  applicationName: 'SchoolOS',
+  applicationName: 'VidyaPrabandha',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'SchoolOS',
+    title: 'VidyaPrabandha',
   },
   icons: {
     icon: '/icon.svg',

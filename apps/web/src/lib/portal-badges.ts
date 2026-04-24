@@ -16,7 +16,7 @@ const BASE: Record<Exclude<AppPortal, 'admin'>, PortalBadge> = {
   },
   superadmin: {
     label: 'Platform owner',
-    hint: 'Manage all schools on SchoolOS',
+    hint: 'Manage all schools on VidyaPrabandha',
     className: 'border-violet-200 bg-violet-50 text-violet-900',
   },
 }

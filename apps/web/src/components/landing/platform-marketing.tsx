@@ -63,9 +63,9 @@ export function PlatformMarketing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">
-              K
+              VP
             </div>
-            <span className="text-lg font-bold text-slate-900">SchoolOS</span>
+            <span className="text-lg font-bold text-slate-900">VidyaPrabandha</span>
           </div>
           <div className="flex items-center gap-3">
             <InstallAppButton />
@@ -94,7 +94,7 @@ export function PlatformMarketing() {
           Run your school like a <span className="text-brand-600">modern institution</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-500">
-          SchoolOS is the multi-tenant platform for fees, admissions, attendance, parent communication, and a
+          VidyaPrabandha is the multi-tenant platform for fees, admissions, attendance, parent communication, and a
           beautiful public website for each school — all from one dashboard.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -188,7 +188,7 @@ export function PlatformMarketing() {
             href="/sign-in"
             className="inline-block rounded-lg bg-white px-8 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-colors hover:bg-brand-50"
           >
-            Sign in to SchoolOS
+            Sign in to VidyaPrabandha
           </Link>
         </div>
       </section>
@@ -197,11 +197,11 @@ export function PlatformMarketing() {
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4 py-6 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <div className="flex h-6 w-6 items-center justify-center rounded bg-brand-500 text-xs font-bold text-white">
-              K
+              VP
             </div>
-            <span className="font-medium text-slate-700">SchoolOS</span>
+            <span className="font-medium text-slate-700">VidyaPrabandha</span>
           </div>
-          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} SchoolOS. School management for India.</p>
+          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} VidyaPrabandha. School management for India.</p>
         </div>
       </footer>
     </div>

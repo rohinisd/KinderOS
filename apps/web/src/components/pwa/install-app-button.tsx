@@ -52,7 +52,7 @@ export function InstallAppButton() {
     const onInstalled = () => {
       setDeferredPrompt(null)
       setIsStandalone(true)
-      toast.success('SchoolOS installed successfully')
+      toast.success('VidyaPrabandha installed successfully')
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
@@ -102,7 +102,7 @@ export function InstallAppButton() {
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Install SchoolOS</DialogTitle>
+            <DialogTitle>Install VidyaPrabandha</DialogTitle>
             <DialogDescription>
               Browser install popup can be hidden. Use these manual steps.
             </DialogDescription>

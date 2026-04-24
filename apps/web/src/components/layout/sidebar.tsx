@@ -147,9 +147,9 @@ export function Sidebar({
               portal === 'owner' && 'bg-brand-500'
             )}
           >
-            K
+            VP
           </div>
-          <span className="text-lg font-semibold">SchoolOS</span>
+          <span className="text-lg font-semibold">VidyaPrabandha</span>
         </Link>
       </div>
 

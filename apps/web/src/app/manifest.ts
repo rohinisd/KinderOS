@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'SchoolOS',
-    short_name: 'SchoolOS',
+    name: 'VidyaPrabandha',
+    short_name: 'VidyaPrabandha',
     description:
       'School management platform for kindergarten schools: students, attendance, homework, communication, and operations.',
     start_url: '/',

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SchoolOS icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VidyaPrabandha icon">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#534AB7" />
@@ -6,7 +6,5 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="120" fill="url(#bg)" />
-  <circle cx="256" cy="186" r="66" fill="#ffffff" opacity="0.95" />
-  <path d="M146 374c24-56 64-86 110-86s86 30 110 86" fill="none" stroke="#ffffff" stroke-width="36" stroke-linecap="round" />
-  <path d="M144 140l56 56-56 56" fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="256" y="314" font-family="Arial, Helvetica, sans-serif" font-size="188" font-weight="700" text-anchor="middle" fill="#ffffff">VP</text>
 </svg>
