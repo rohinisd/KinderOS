@@ -117,8 +117,16 @@ export function InstallAppButton() {
             ) : (
               <ol className="list-decimal space-y-1.5 pl-5">
                 <li>Open browser menu (three dots).</li>
-                <li>Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
-                <li>Confirm install.</li>
+                <li>
+                  In Chrome, select <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+                </li>
+                <li>
+                  In Edge, go to <strong>Apps</strong> and select <strong>Install this site as an app</strong>.
+                </li>
+                <li>
+                  If install option is still missing, choose <strong>Create shortcut</strong> and enable
+                  <strong> Open as window</strong> for app-like mode.
+                </li>
               </ol>
             )}
           </div>
