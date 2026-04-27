@@ -26,6 +26,7 @@ import {
   Clock,
   CalendarDays,
   ImageIcon,
+  Database,
 } from 'lucide-react'
 
 type Portal = 'owner' | 'teacher' | 'admin' | 'superadmin'
@@ -114,6 +115,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Schools', href: '/admin/tenants', icon: Building2 },
     { label: 'Billing', href: '/admin/billing', icon: CreditCard },
     { label: 'Feature Flags', href: '/admin/feature-flags', icon: ToggleLeft },
+    { label: 'Backups', href: '/admin/backups', icon: Database },
   ],
 }
 
