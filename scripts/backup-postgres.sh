@@ -17,12 +17,28 @@ GZ_PATH="${SQL_PATH}.gz"
 HASH_PATH="${GZ_PATH}.sha256"
 
 echo "Creating SQL dump..."
-pg_dump \
-  --no-owner \
-  --no-privileges \
-  --clean \
-  --if-exists \
-  "$DATABASE_URL" > "$SQL_PATH"
+if [[ "${USE_DOCKER_PG_DUMP:-true}" == "true" ]] && command -v docker >/dev/null 2>&1; then
+  echo "Using Dockerized pg_dump (Postgres ${PG_DUMP_IMAGE_TAG:-17})..."
+  docker run --rm \
+    "postgres:${PG_DUMP_IMAGE_TAG:-17}" \
+    pg_dump \
+    --no-owner \
+    --no-privileges \
+    --clean \
+    --if-exists \
+    "$DATABASE_URL" > "$SQL_PATH"
+elif command -v pg_dump >/dev/null 2>&1; then
+  echo "Using local pg_dump..."
+  pg_dump \
+    --no-owner \
+    --no-privileges \
+    --clean \
+    --if-exists \
+    "$DATABASE_URL" > "$SQL_PATH"
+else
+  echo "Neither docker nor pg_dump is available."
+  exit 1
+fi
 
 echo "Compressing dump..."
 gzip -9 "$SQL_PATH"
