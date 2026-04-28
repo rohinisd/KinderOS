@@ -1,5 +1,4 @@
-import React from 'react'
-import { Document, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 type CustomComponent = { label: string; amountPaise: number }
 
@@ -41,19 +40,6 @@ export type PayslipPdfData = {
   netPay: number
 }
 
-const styles = StyleSheet.create({
-  page: { fontSize: 10, padding: 24, color: '#111827' },
-  title: { fontSize: 18, fontWeight: 700, marginBottom: 4 },
-  subtitle: { fontSize: 11, color: '#374151', marginBottom: 12 },
-  section: { marginBottom: 10, border: '1 solid #e5e7eb', borderRadius: 6, padding: 8 },
-  sectionTitle: { fontSize: 11, fontWeight: 700, marginBottom: 6 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-  key: { color: '#4b5563' },
-  value: { fontWeight: 600 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingTop: 6, borderTop: '1 solid #e5e7eb' },
-  netBox: { backgroundColor: '#f3f4f6', border: '1 solid #d1d5db', borderRadius: 6, padding: 8 },
-})
-
 function formatCurrency(paise: number): string {
   const amount = paise / 100
   return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
@@ -63,93 +49,79 @@ function monthLabel(month: number, year: number): string {
   return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 }
 
-function PayslipDocument({ data }: { data: PayslipPdfData }) {
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Salary Payslip</Text>
-        <Text style={styles.subtitle}>
-          {data.schoolName} - {monthLabel(data.month, data.year)}
-        </Text>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Employee Details</Text>
-          <View style={styles.row}><Text style={styles.key}>Name</Text><Text style={styles.value}>{data.staffName}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Role</Text><Text>{data.staffRole}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>PAN</Text><Text>{data.panNumber ?? '-'}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>UAN</Text><Text>{data.uanNumber ?? '-'}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>ESI Number</Text><Text>{data.esiNumber ?? '-'}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Bank Holder</Text><Text>{data.bankAccountHolder ?? '-'}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Bank A/C</Text><Text>{data.bankAccountNumber ?? '-'}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>IFSC</Text><Text>{data.bankIfsc ?? '-'}</Text></View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attendance Summary</Text>
-          <View style={styles.row}><Text style={styles.key}>Attendance marked</Text><Text>{data.attendanceDays}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Present days</Text><Text>{data.presentDays}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Late punches</Text><Text>{data.lateCount}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>LWP days</Text><Text>{data.lwpDays}</Text></View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Earnings</Text>
-          <View style={styles.row}><Text style={styles.key}>Basic</Text><Text>{formatCurrency(data.earningBasic)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>HRA</Text><Text>{formatCurrency(data.earningHra)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>DA</Text><Text>{formatCurrency(data.earningDa)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Conveyance</Text><Text>{formatCurrency(data.earningConveyance)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Special allowance</Text><Text>{formatCurrency(data.earningSpecial)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Overtime</Text><Text>{formatCurrency(data.earningOvertime)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Bonus</Text><Text>{formatCurrency(data.earningBonus)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Incentive</Text><Text>{formatCurrency(data.earningIncentive)}</Text></View>
-          {data.customEarnings.map((c) => (
-            <View key={`earning-${c.label}`} style={styles.row}>
-              <Text style={styles.key}>{c.label}</Text>
-              <Text>{formatCurrency(c.amountPaise)}</Text>
-            </View>
-          ))}
-          <View style={styles.totalRow}>
-            <Text style={styles.value}>Gross earnings</Text>
-            <Text style={styles.value}>{formatCurrency(data.grossEarnings)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Deductions</Text>
-          <View style={styles.row}><Text style={styles.key}>PF (employee)</Text><Text>{formatCurrency(data.deductionPfEmployee)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>ESI (employee)</Text><Text>{formatCurrency(data.deductionEsiEmployee)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Professional tax</Text><Text>{formatCurrency(data.deductionProfessionalTax)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>TDS</Text><Text>{formatCurrency(data.deductionTds)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>LWP deduction</Text><Text>{formatCurrency(data.deductionLwp)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Late deduction</Text><Text>{formatCurrency(data.deductionLate)}</Text></View>
-          <View style={styles.row}><Text style={styles.key}>Advance recovery</Text><Text>{formatCurrency(data.deductionAdvanceRecovery)}</Text></View>
-          {data.customDeductions.map((c) => (
-            <View key={`deduction-${c.label}`} style={styles.row}>
-              <Text style={styles.key}>{c.label}</Text>
-              <Text>{formatCurrency(c.amountPaise)}</Text>
-            </View>
-          ))}
-          <View style={styles.totalRow}>
-            <Text style={styles.value}>Total deductions</Text>
-            <Text style={styles.value}>{formatCurrency(data.totalDeductions)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.netBox}>
-          <View style={styles.row}>
-            <Text style={styles.value}>Net pay</Text>
-            <Text style={styles.value}>{formatCurrency(data.netPay)}</Text>
-          </View>
-        </View>
-      </Page>
-    </Document>
-  )
-}
-
 export async function renderPayslipPdf(data: PayslipPdfData): Promise<Uint8Array> {
-  const buffer = await renderToBuffer(<PayslipDocument data={data} />)
-  const bytes = new Uint8Array(buffer.length)
-  bytes.set(buffer)
-  return bytes
+  const pdf = await PDFDocument.create()
+  const page = pdf.addPage([595.28, 841.89]) // A4
+  const font = await pdf.embedFont(StandardFonts.Helvetica)
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
+
+  const left = 40
+  let y = 800
+  const lh = 14
+  const gray = rgb(0.2, 0.2, 0.2)
+
+  const draw = (label: string, value?: string, useBold = false) => {
+    const currentFont = useBold ? bold : font
+    page.drawText(label, { x: left, y, size: 10, font: currentFont, color: gray })
+    if (value !== undefined) {
+      page.drawText(value, { x: 350, y, size: 10, font: currentFont, color: gray })
+    }
+    y -= lh
+  }
+
+  draw('Salary Payslip', undefined, true)
+  draw(`${data.schoolName} - ${monthLabel(data.month, data.year)}`)
+  y -= 4
+
+  draw('Employee Details', undefined, true)
+  draw('Name', data.staffName)
+  draw('Role', data.staffRole)
+  draw('PAN', data.panNumber ?? '-')
+  draw('UAN', data.uanNumber ?? '-')
+  draw('ESI Number', data.esiNumber ?? '-')
+  draw('Bank Holder', data.bankAccountHolder ?? '-')
+  draw('Bank Account', data.bankAccountNumber ?? '-')
+  draw('IFSC', data.bankIfsc ?? '-')
+  y -= 6
+
+  draw('Attendance Summary', undefined, true)
+  draw('Attendance marked', String(data.attendanceDays))
+  draw('Present days', String(data.presentDays))
+  draw('Late punches', String(data.lateCount))
+  draw('LWP days', String(data.lwpDays))
+  y -= 6
+
+  draw('Earnings', undefined, true)
+  draw('Basic', formatCurrency(data.earningBasic))
+  draw('HRA', formatCurrency(data.earningHra))
+  draw('DA', formatCurrency(data.earningDa))
+  draw('Conveyance', formatCurrency(data.earningConveyance))
+  draw('Special allowance', formatCurrency(data.earningSpecial))
+  draw('Overtime', formatCurrency(data.earningOvertime))
+  draw('Bonus', formatCurrency(data.earningBonus))
+  draw('Incentive', formatCurrency(data.earningIncentive))
+  for (const c of data.customEarnings) {
+    draw(c.label, formatCurrency(c.amountPaise))
+  }
+  draw('Gross earnings', formatCurrency(data.grossEarnings), true)
+  y -= 6
+
+  draw('Deductions', undefined, true)
+  draw('PF (employee)', formatCurrency(data.deductionPfEmployee))
+  draw('ESI (employee)', formatCurrency(data.deductionEsiEmployee))
+  draw('Professional tax', formatCurrency(data.deductionProfessionalTax))
+  draw('TDS', formatCurrency(data.deductionTds))
+  draw('LWP deduction', formatCurrency(data.deductionLwp))
+  draw('Late deduction', formatCurrency(data.deductionLate))
+  draw('Advance recovery', formatCurrency(data.deductionAdvanceRecovery))
+  for (const c of data.customDeductions) {
+    draw(c.label, formatCurrency(c.amountPaise))
+  }
+  draw('Total deductions', formatCurrency(data.totalDeductions), true)
+  y -= 8
+
+  draw('Net pay', formatCurrency(data.netPay), true)
+
+  return pdf.save()
 }
 
