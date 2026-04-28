@@ -1,7 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { isPlatformHost, normalizeHost } from '@/lib/platform-host'
-import { getSchoolSlugByCustomHost } from '@/lib/school-from-host'
 import { RESERVED_SCHOOL_SLUGS } from '@/lib/reserved-slugs'
 
 /** App routes at the first URL segment — not school public marketing pages (path-based). */
@@ -48,17 +47,10 @@ export default clerkMiddleware(async (auth, request) => {
   const pathname = url.pathname
   const host = normalizeHost(request.headers.get('host') ?? '')
 
-  // Custom domain on Vercel: /admissions and /blog map to /[slug]/...
-  if (!isPlatformHost(host)) {
-    const slug = await getSchoolSlugByCustomHost(host)
-    if (slug) {
-      if (pathname === '/admissions') {
-        return NextResponse.rewrite(new URL(`/${slug}/admissions`, request.url))
-      }
-      if (pathname === '/blog' || pathname.startsWith('/blog/')) {
-        return NextResponse.rewrite(new URL(`/${slug}${pathname}`, request.url))
-      }
-    }
+  // Avoid DB access inside middleware runtime.
+  // Custom-domain blog/admissions can be resolved at page level.
+  if (!isPlatformHost(host) && (pathname === '/admissions' || pathname === '/blog' || pathname.startsWith('/blog/'))) {
+    return NextResponse.next()
   }
 
   if (isPublicSchoolMarketingPath(pathname)) return NextResponse.next()
