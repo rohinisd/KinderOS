@@ -106,9 +106,28 @@ function monthLabel(month: number, year: number) {
   return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 }
 
-function payslipDownloadUrl(staffId: string, month: number, year: number): string {
-  const params = new URLSearchParams({ staffId, month: String(month), year: String(year) })
+function payslipPdfUrl(
+  staffId: string,
+  month: number,
+  year: number,
+  disposition: 'attachment' | 'inline' = 'attachment'
+): string {
+  const params = new URLSearchParams({
+    staffId,
+    month: String(month),
+    year: String(year),
+    disposition,
+  })
   return `/api/payroll/payslip?${params.toString()}`
+}
+
+function payLine(label: string, value: number, tone: 'default' | 'deduction' = 'default') {
+  return (
+    <div className="flex items-center justify-between py-0.5">
+      <span className={tone === 'deduction' ? 'text-red-600' : 'text-slate-600'}>{label}</span>
+      <span className="tabular-nums">{formatCurrency(value)}</span>
+    </div>
+  )
 }
 
 function defaultDraft(structure?: SalaryStructureRow, salary?: number | null): StructureDraft {
@@ -351,7 +370,7 @@ export function PayrollClient({
                         </Button>
                         {payroll ? (
                           <Button type="button" variant="outline" size="icon" asChild>
-                            <a href={payslipDownloadUrl(member.id, month, year)} aria-label="Download payslip PDF">
+                              <a href={payslipPdfUrl(member.id, month, year, 'attachment')} aria-label="Download payslip PDF">
                               <Download className="h-4 w-4" />
                             </a>
                           </Button>
@@ -570,58 +589,89 @@ export function PayrollClient({
       <Dialog open={payslipOpen} onOpenChange={setPayslipOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Payslip details</DialogTitle>
+            <DialogTitle>
+              Payslip details
+              {selectedStaff ? ` - ${selectedStaff.firstName} ${selectedStaff.lastName}` : ''}
+            </DialogTitle>
             <DialogDescription>{monthLabel(month, year)}</DialogDescription>
           </DialogHeader>
           {selectedPayslip && (
             <div className="space-y-4 text-sm">
               {selectedPayslipStaffId ? (
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" size="sm" asChild>
-                    <a href={payslipDownloadUrl(selectedPayslipStaffId, month, year)}>
+                    <a href={payslipPdfUrl(selectedPayslipStaffId, month, year, 'inline')} target="_blank" rel="noreferrer">
+                      View PDF
+                    </a>
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <a href={payslipPdfUrl(selectedPayslipStaffId, month, year, 'attachment')}>
                       <Download className="mr-2 h-4 w-4" />
                       Download PDF
                     </a>
                   </Button>
                 </div>
               ) : null}
-              <div className="rounded-lg border p-3">
-                <p>Attendance marked: {selectedPayslip.attendanceDays}</p>
-                <p>Present days: {selectedPayslip.presentDays}</p>
-                <p>Late punches: {selectedPayslip.lateCount}</p>
-                <p>LWP days: {selectedPayslip.lwpDays}</p>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg border bg-white p-2 text-center">
+                  <p className="text-lg font-semibold text-slate-900">{selectedPayslip.attendanceDays}</p>
+                  <p className="text-[11px] text-slate-500">Attendance marked</p>
+                </div>
+                <div className="rounded-lg border bg-white p-2 text-center">
+                  <p className="text-lg font-semibold text-slate-900">{selectedPayslip.presentDays}</p>
+                  <p className="text-[11px] text-slate-500">Present days</p>
+                </div>
+                <div className="rounded-lg border bg-white p-2 text-center">
+                  <p className="text-lg font-semibold text-slate-900">{selectedPayslip.lwpDays}</p>
+                  <p className="text-[11px] text-slate-500">LWP days</p>
+                </div>
+                <div className="rounded-lg border bg-white p-2 text-center">
+                  <p className="text-lg font-semibold text-slate-900">{selectedPayslip.lateCount}</p>
+                  <p className="text-[11px] text-slate-500">Late punches</p>
+                </div>
               </div>
-              <div className="grid gap-2 rounded-lg border p-3">
-                <p><strong>Earnings</strong></p>
-                <p>Basic: {formatCurrency(selectedPayslip.earningBasic)}</p>
-                <p>HRA: {formatCurrency(selectedPayslip.earningHra)}</p>
-                <p>DA: {formatCurrency(selectedPayslip.earningDa)}</p>
-                <p>Conveyance: {formatCurrency(selectedPayslip.earningConveyance)}</p>
-                <p>Special allowance: {formatCurrency(selectedPayslip.earningSpecial)}</p>
-                <p>Overtime: {formatCurrency(selectedPayslip.earningOvertime)}</p>
-                <p>Bonus: {formatCurrency(selectedPayslip.earningBonus)}</p>
-                <p>Incentive: {formatCurrency(selectedPayslip.earningIncentive)}</p>
-                {selectedPayslip.customEarnings.map((c, i) => (
-                  <p key={`pe-${i}`}>{c.label}: {formatCurrency(c.amountPaise)}</p>
-                ))}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">Earnings</p>
+                  {payLine('Basic', selectedPayslip.earningBasic)}
+                  {payLine('HRA', selectedPayslip.earningHra)}
+                  {payLine('DA', selectedPayslip.earningDa)}
+                  {payLine('Conveyance', selectedPayslip.earningConveyance)}
+                  {payLine('Special allowance', selectedPayslip.earningSpecial)}
+                  {payLine('Overtime', selectedPayslip.earningOvertime)}
+                  {payLine('Bonus', selectedPayslip.earningBonus)}
+                  {payLine('Incentive', selectedPayslip.earningIncentive)}
+                  {selectedPayslip.customEarnings.map((c, i) => (
+                    <div key={`pe-${i}`}>{payLine(c.label, c.amountPaise)}</div>
+                  ))}
+                  <div className="mt-2 border-t border-emerald-200 pt-2">
+                    {payLine('Gross earnings', selectedPayslip.grossEarnings)}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-red-100 bg-red-50/50 p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-red-700">Deductions</p>
+                  {payLine('PF (employee)', selectedPayslip.deductionPfEmployee, 'deduction')}
+                  {payLine('ESI (employee)', selectedPayslip.deductionEsiEmployee, 'deduction')}
+                  {payLine('Professional tax', selectedPayslip.deductionProfessionalTax, 'deduction')}
+                  {payLine('TDS', selectedPayslip.deductionTds, 'deduction')}
+                  {payLine('LWP deduction', selectedPayslip.deductionLwp, 'deduction')}
+                  {payLine('Late deduction', selectedPayslip.deductionLate, 'deduction')}
+                  {payLine('Advance recovery', selectedPayslip.deductionAdvanceRecovery, 'deduction')}
+                  {selectedPayslip.customDeductions.map((c, i) => (
+                    <div key={`pd-${i}`}>{payLine(c.label, c.amountPaise, 'deduction')}</div>
+                  ))}
+                  <div className="mt-2 border-t border-red-200 pt-2">
+                    {payLine('Total deductions', selectedPayslip.totalDeductions, 'deduction')}
+                  </div>
+                </div>
               </div>
-              <div className="grid gap-2 rounded-lg border p-3">
-                <p><strong>Deductions</strong></p>
-                <p>PF (employee): {formatCurrency(selectedPayslip.deductionPfEmployee)}</p>
-                <p>ESI (employee): {formatCurrency(selectedPayslip.deductionEsiEmployee)}</p>
-                <p>Professional tax: {formatCurrency(selectedPayslip.deductionProfessionalTax)}</p>
-                <p>TDS: {formatCurrency(selectedPayslip.deductionTds)}</p>
-                <p>LWP deduction: {formatCurrency(selectedPayslip.deductionLwp)}</p>
-                <p>Late deduction: {formatCurrency(selectedPayslip.deductionLate)}</p>
-                <p>Advance recovery: {formatCurrency(selectedPayslip.deductionAdvanceRecovery)}</p>
-                {selectedPayslip.customDeductions.map((c, i) => (
-                  <p key={`pd-${i}`}>{c.label}: {formatCurrency(c.amountPaise)}</p>
-                ))}
-              </div>
-              <div className="rounded-lg border bg-muted/20 p-3">
-                <p><strong>Gross:</strong> {formatCurrency(selectedPayslip.grossEarnings)}</p>
-                <p><strong>Total deductions:</strong> {formatCurrency(selectedPayslip.totalDeductions)}</p>
-                <p className="text-base"><strong>Net pay:</strong> {formatCurrency(selectedPayslip.netPay)}</p>
+
+              <div className="rounded-lg border-2 border-violet-200 bg-violet-50 p-4 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Net pay (take home)</p>
+                <p className="mt-1 text-2xl font-bold text-violet-800">{formatCurrency(selectedPayslip.netPay)}</p>
               </div>
             </div>
           )}

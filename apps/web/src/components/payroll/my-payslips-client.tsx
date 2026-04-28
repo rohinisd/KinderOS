@@ -43,8 +43,8 @@ function monthLabel(month: number, year: number) {
   return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 }
 
-function downloadUrl(month: number, year: number): string {
-  const params = new URLSearchParams({ month: String(month), year: String(year) })
+function payslipUrl(month: number, year: number, disposition: 'inline' | 'attachment' = 'attachment'): string {
+  const params = new URLSearchParams({ month: String(month), year: String(year), disposition })
   return `/api/payroll/payslip?${params.toString()}`
 }
 
@@ -85,7 +85,7 @@ export function MyPayslipsClient({ rows }: { rows: MyPayslipRow[] }) {
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button type="button" variant="outline" size="icon" asChild>
-                          <a href={downloadUrl(row.month, row.year)} aria-label="Download payslip PDF">
+                          <a href={payslipUrl(row.month, row.year, 'attachment')} aria-label="Download payslip PDF">
                             <Download className="h-4 w-4" />
                           </a>
                         </Button>
@@ -110,12 +110,19 @@ export function MyPayslipsClient({ rows }: { rows: MyPayslipRow[] }) {
           {selected && (
             <div className="space-y-4 text-sm">
               <div className="flex justify-end">
-                <Button type="button" variant="outline" size="sm" asChild>
-                  <a href={downloadUrl(selected.month, selected.year)}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF
-                  </a>
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <a href={payslipUrl(selected.month, selected.year, 'inline')} target="_blank" rel="noreferrer">
+                      View PDF
+                    </a>
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <a href={payslipUrl(selected.month, selected.year, 'attachment')}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PDF
+                    </a>
+                  </Button>
+                </div>
               </div>
               <div className="rounded-lg border p-3">
                 <p>Attendance marked: {selected.attendanceDays}</p>

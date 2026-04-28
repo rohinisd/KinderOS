@@ -10,6 +10,7 @@ const QuerySchema = z.object({
   month: z.coerce.number().int().min(1).max(12),
   year: z.coerce.number().int().min(2000).max(2100),
   staffId: z.string().cuid().optional(),
+  disposition: z.enum(['inline', 'attachment']).optional(),
 })
 
 function parseComponents(input: unknown): Array<{ label: string; amountPaise: number }> {
@@ -41,12 +42,14 @@ export async function GET(request: NextRequest) {
       month: request.nextUrl.searchParams.get('month'),
       year: request.nextUrl.searchParams.get('year'),
       staffId: request.nextUrl.searchParams.get('staffId') ?? undefined,
+      disposition: request.nextUrl.searchParams.get('disposition') ?? undefined,
     })
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid query params' }, { status: 400 })
     }
 
     const { month, year } = parsed.data
+    const disposition = parsed.data.disposition ?? 'attachment'
     const canDownloadAny = user.role === 'OWNER' || user.role === 'ACCOUNTANT'
     const targetStaffId = canDownloadAny ? parsed.data.staffId ?? user.id : user.id
 
@@ -135,7 +138,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `${disposition}; filename="${fileName}"`,
       },
     })
   } catch (error) {
