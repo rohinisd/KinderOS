@@ -51,6 +51,7 @@ model School {
   
   // Public page section toggles (JSON object of section visibility)
   pageConfig       Json    @default("{}")
+  leavePolicy      Json    @default("{\"clTotal\":12,\"slTotal\":7,\"elTotal\":15}")
   
   // Subscription
   plan             Plan    @default(STARTER)
@@ -84,6 +85,7 @@ model School {
   payrollRuns       PayrollRun[]
   payrollItems      PayrollItem[]
   salaryAdvances    SalaryAdvance[]
+  leaveBalances     LeaveBalance[]
 
   @@index([clerkOrgId])
   @@index([slug])
@@ -290,6 +292,7 @@ model Staff {
   salaryStructure    SalaryStructure?
   payrollItems       PayrollItem[]
   salaryAdvances     SalaryAdvance[]
+  leaveBalances      LeaveBalance[]
 
   @@index([schoolId])
   @@map("staff")
@@ -958,6 +961,26 @@ enum LeaveStatus {
   APPROVED
   REJECTED
   CANCELLED
+}
+
+model LeaveBalance {
+  id      String @id @default(cuid())
+  schoolId String
+  staffId String
+  year    Int
+  clTotal Float @default(12)
+  clUsed  Float @default(0)
+  slTotal Float @default(7)
+  slUsed  Float @default(0)
+  elTotal Float @default(15)
+  elUsed  Float @default(0)
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staff  Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, staffId, year])
+  @@index([schoolId, year])
+  @@map("leave_balances")
 }
 
 model StudentLeaveRequest {

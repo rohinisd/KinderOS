@@ -1,4 +1,4 @@
-import { getAuthUser, requireSchoolAuth } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/layout/page-header'
@@ -6,51 +6,42 @@ import { LeaveTracker } from '@/components/staff/leave-tracker'
 
 export const dynamic = 'force-dynamic'
 
-const APPROVER_ROLES = new Set(['OWNER', 'PRINCIPAL', 'ADMIN'])
+export default async function OwnerLeavesPage() {
+  const user = await requireAuth()
+  if (user.role !== 'OWNER') redirect('/no-access')
 
-export default async function OfficeLeavesPage() {
-  const authUser = await getAuthUser()
-  if (!authUser) redirect('/no-access')
-  const { schoolId, userId } = await requireSchoolAuth()
-  const canApprove = APPROVER_ROLES.has(authUser.role)
-  const canManageBalances = authUser.role === 'OWNER'
+  const schoolId = user.school.id
   const year = new Date().getFullYear()
 
   const [items, balances, staff, school] = await Promise.all([
     prisma.leaveRequest.findMany({
-    where: canApprove ? { schoolId } : { schoolId, staffId: userId },
-    orderBy: [{ createdAt: 'desc' }],
-    select: {
-      id: true,
-      leaveType: true,
-      startDate: true,
-      endDate: true,
-      reason: true,
-      status: true,
-      note: true,
-      staff: { select: { firstName: true, lastName: true } },
-    },
+      where: { schoolId },
+      orderBy: [{ createdAt: 'desc' }],
+      select: {
+        id: true,
+        leaveType: true,
+        startDate: true,
+        endDate: true,
+        reason: true,
+        status: true,
+        note: true,
+        staff: { select: { firstName: true, lastName: true } },
+      },
     }),
-    canManageBalances
-      ? prisma.leaveBalance.findMany({
-          where: { schoolId, year },
-          include: { staff: { select: { firstName: true, lastName: true, designation: true } } },
-          orderBy: { staff: { firstName: 'asc' } },
-        })
-      : Promise.resolve([]),
-    canManageBalances
-      ? prisma.staff.findMany({
-          where: { schoolId, deletedAt: null, role: { not: 'OWNER' } },
-          select: { id: true, firstName: true, lastName: true },
-          orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-        })
-      : Promise.resolve([]),
-    canManageBalances
-      ? prisma.school.findUnique({
-          where: { id: schoolId },
-          select: { leavePolicy: true },
-        })
-      : Promise.resolve(null),
+    prisma.leaveBalance.findMany({
+      where: { schoolId, year },
+      include: { staff: { select: { firstName: true, lastName: true, designation: true } } },
+      orderBy: { staff: { firstName: 'asc' } },
+    }),
+    prisma.staff.findMany({
+      where: { schoolId, deletedAt: null, role: { not: 'OWNER' } },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    }),
+    prisma.school.findUnique({
+      where: { id: schoolId },
+      select: { leavePolicy: true },
+    }),
   ])
 
   const serialized = items.map((item) => ({
@@ -97,14 +88,11 @@ export default async function OfficeLeavesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Leave Tracker"
-        description={canApprove ? 'Approve or reject staff leaves' : 'Request and track your leaves'}
-      />
+      <PageHeader title="Leave Tracker" description="Approve leaves and manage CL/SL/EL balances" />
       <LeaveTracker
-        canApprove={canApprove}
+        canApprove
         items={serialized}
-        canManageBalances={canManageBalances}
+        canManageBalances
         balanceRows={balanceRows}
         missingStaff={missingStaff}
         balanceYear={year}

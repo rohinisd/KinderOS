@@ -21,19 +21,32 @@ function istDayRange(now = new Date()): { start: Date; end: Date } {
 export default async function ClassroomPunchPage() {
   const { schoolId, userId } = await requireTeacher()
   const { start, end } = istDayRange()
+  const monthStart = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1))
+  const monthEnd = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1))
 
-  const todayRecord = await prisma.staffAttendance.findFirst({
-    where: {
-      schoolId,
-      staffId: userId,
-      date: { gte: start, lt: end },
-    },
-    select: {
-      status: true,
-      checkIn: true,
-      checkOut: true,
-    },
-  })
+  const [todayRecord, monthRecords] = await Promise.all([
+    prisma.staffAttendance.findFirst({
+      where: {
+        schoolId,
+        staffId: userId,
+        date: { gte: start, lt: end },
+      },
+      select: {
+        status: true,
+        checkIn: true,
+        checkOut: true,
+      },
+    }),
+    prisma.staffAttendance.findMany({
+      where: {
+        schoolId,
+        staffId: userId,
+        date: { gte: monthStart, lt: monthEnd },
+      },
+      select: { date: true, status: true, checkIn: true, checkOut: true },
+      orderBy: { date: 'desc' },
+    }),
+  ])
 
   const serialized = todayRecord
     ? {
@@ -43,13 +56,20 @@ export default async function ClassroomPunchPage() {
       }
     : null
 
+  const history = monthRecords.map((r) => ({
+    date: r.date.toISOString(),
+    status: r.status,
+    checkIn: r.checkIn?.toISOString() ?? null,
+    checkOut: r.checkOut?.toISOString() ?? null,
+  }))
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Punch In / Punch Out"
         description="Mark your working hours for today"
       />
-      <PunchCard record={serialized} />
+      <PunchCard record={serialized} history={history} />
     </div>
   )
 }

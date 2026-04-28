@@ -104,6 +104,8 @@ export async function upsertSalaryStructure(
 
     revalidatePath('/dashboard/payroll')
     revalidatePath('/office/payroll')
+    revalidatePath('/office/my-payroll')
+    revalidatePath('/classroom/payroll')
     return ok({ staffId: data.staffId })
   } catch (error) {
     console.error('[upsertSalaryStructure]', error)
@@ -381,6 +383,8 @@ export async function processPayroll(
 
     revalidatePath('/dashboard/payroll')
     revalidatePath('/office/payroll')
+    revalidatePath('/office/my-payroll')
+    revalidatePath('/classroom/payroll')
     return ok({ runId: run.id, processedStaff: staff.length })
   } catch (error) {
     console.error('[processPayroll]', error)

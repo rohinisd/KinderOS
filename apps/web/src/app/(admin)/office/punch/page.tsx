@@ -153,8 +153,11 @@ export default async function OfficePunchPage({
         ? monthDays(start, end)
         : []
   const today = istDayRange(todayIsoDate())
+  const todayDate = new Date(`${todayIsoDate()}T00:00:00.000Z`)
+  const monthStart = new Date(Date.UTC(todayDate.getUTCFullYear(), todayDate.getUTCMonth(), 1))
+  const monthEnd = new Date(Date.UTC(todayDate.getUTCFullYear(), todayDate.getUTCMonth() + 1, 1))
 
-  const [staffRows, periodRecords, myTodayRecord] = await Promise.all([
+  const [staffRows, periodRecords, myTodayRecord, myMonthRecords] = await Promise.all([
     prisma.staff.findMany({
       where: { schoolId, status: 'ACTIVE', deletedAt: null },
       select: {
@@ -178,6 +181,15 @@ export default async function OfficePunchPage({
       },
       select: { status: true, checkIn: true, checkOut: true },
     }),
+    prisma.staffAttendance.findMany({
+      where: {
+        schoolId,
+        staffId: userId,
+        date: { gte: monthStart, lt: monthEnd },
+      },
+      select: { date: true, status: true, checkIn: true, checkOut: true },
+      orderBy: { date: 'desc' },
+    }),
   ])
 
   const recordsByStaff = new Map<string, typeof periodRecords>()
@@ -194,6 +206,13 @@ export default async function OfficePunchPage({
       checkOut: myTodayRecord.checkOut?.toISOString() ?? null,
     }
     : null
+
+  const myHistory = myMonthRecords.map((r) => ({
+    date: r.date.toISOString(),
+    status: r.status,
+    checkIn: r.checkIn?.toISOString() ?? null,
+    checkOut: r.checkOut?.toISOString() ?? null,
+  }))
 
   const allRows = staffRows.map((staff) => {
     const recs = recordsByStaff.get(staff.id) ?? []
@@ -243,7 +262,7 @@ export default async function OfficePunchPage({
             : 'Mark your attendance time for today'
         }
       />
-      <PunchCard record={serialized} />
+      <PunchCard record={serialized} history={myHistory} />
 
       <Card>
         <CardHeader>

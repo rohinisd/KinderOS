@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { LeaveBalanceEditor } from '@/components/staff/leave-balance-editor'
 
 type LeaveItem = {
   id: string
@@ -22,6 +23,30 @@ type LeaveItem = {
   staffName: string
 }
 
+type BalanceRow = {
+  id: string
+  staffId: string
+  staffName: string
+  designation: string | null
+  clTotal: number
+  clUsed: number
+  slTotal: number
+  slUsed: number
+  elTotal: number
+  elUsed: number
+}
+
+type MissingStaff = {
+  id: string
+  name: string
+}
+
+type LeaveDefaults = {
+  clTotal: number
+  slTotal: number
+  elTotal: number
+}
+
 function toDateInputValue(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 }
@@ -29,9 +54,19 @@ function toDateInputValue(date: Date): string {
 export function LeaveTracker({
   canApprove,
   items,
+  canManageBalances = false,
+  balanceRows = [],
+  missingStaff = [],
+  balanceYear = new Date().getFullYear(),
+  leaveDefaults = { clTotal: 12, slTotal: 7, elTotal: 15 },
 }: {
   canApprove: boolean
   items: LeaveItem[]
+  canManageBalances?: boolean
+  balanceRows?: BalanceRow[]
+  missingStaff?: MissingStaff[]
+  balanceYear?: number
+  leaveDefaults?: LeaveDefaults
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -74,6 +109,25 @@ export function LeaveTracker({
 
   return (
     <div className="space-y-6">
+      {canManageBalances ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Leave Balance Setup</CardTitle>
+            <CardDescription>
+              Set CL, SL and EL totals for staff and configure default yearly limits.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LeaveBalanceEditor
+              balances={balanceRows}
+              missingStaff={missingStaff}
+              year={balanceYear}
+              defaults={leaveDefaults}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle>Request leave</CardTitle>

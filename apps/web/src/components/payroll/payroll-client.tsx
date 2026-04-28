@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Eye, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Eye, Settings, ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -106,6 +106,11 @@ function monthLabel(month: number, year: number) {
   return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 }
 
+function payslipDownloadUrl(staffId: string, month: number, year: number): string {
+  const params = new URLSearchParams({ staffId, month: String(month), year: String(year) })
+  return `/api/payroll/payslip?${params.toString()}`
+}
+
 function defaultDraft(structure?: SalaryStructureRow, salary?: number | null): StructureDraft {
   return {
     ctcMonthlyInr: amountFromPaise(structure?.ctcMonthly ?? salary ?? 0),
@@ -172,6 +177,7 @@ export function PayrollClient({
   const [selectedStaff, setSelectedStaff] = useState<StaffRow | null>(null)
   const [draft, setDraft] = useState<StructureDraft | null>(null)
   const [selectedPayslip, setSelectedPayslip] = useState<PayrollItemRow | null>(null)
+  const [selectedPayslipStaffId, setSelectedPayslipStaffId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const structureByStaff = useMemo(() => new Map(structures.map((s) => [s.staffId, s])), [structures])
@@ -336,12 +342,24 @@ export function PayrollClient({
                           disabled={!payroll}
                           onClick={() => {
                             if (!payroll) return
+                            setSelectedPayslipStaffId(member.id)
                             setSelectedPayslip(payroll)
                             setPayslipOpen(true)
                           }}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
+                        {payroll ? (
+                          <Button type="button" variant="outline" size="icon" asChild>
+                            <a href={payslipDownloadUrl(member.id, month, year)} aria-label="Download payslip PDF">
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        ) : (
+                          <Button type="button" variant="outline" size="icon" disabled>
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -557,6 +575,16 @@ export function PayrollClient({
           </DialogHeader>
           {selectedPayslip && (
             <div className="space-y-4 text-sm">
+              {selectedPayslipStaffId ? (
+                <div className="flex justify-end">
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <a href={payslipDownloadUrl(selectedPayslipStaffId, month, year)}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PDF
+                    </a>
+                  </Button>
+                </div>
+              ) : null}
               <div className="rounded-lg border p-3">
                 <p>Attendance marked: {selectedPayslip.attendanceDays}</p>
                 <p>Present days: {selectedPayslip.presentDays}</p>
