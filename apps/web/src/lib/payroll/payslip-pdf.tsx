@@ -1,5 +1,5 @@
 import React from 'react'
-import { Document, Page, StyleSheet, Text, View, pdf } from '@react-pdf/renderer'
+import { Document, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer'
 
 type CustomComponent = { label: string; amountPaise: number }
 
@@ -146,57 +146,10 @@ function PayslipDocument({ data }: { data: PayslipPdfData }) {
   )
 }
 
-async function streamToUint8Array(stream: unknown): Promise<Uint8Array> {
-  if (stream instanceof Uint8Array) return stream
-
-  if (stream && typeof stream === 'object' && 'getReader' in stream) {
-    const reader = (stream as ReadableStream<Uint8Array>).getReader()
-    const chunks: Uint8Array[] = []
-    let total = 0
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      if (!value) continue
-      chunks.push(value)
-      total += value.length
-    }
-    const out = new Uint8Array(total)
-    let offset = 0
-    for (const chunk of chunks) {
-      out.set(chunk, offset)
-      offset += chunk.length
-    }
-    return out
-  }
-
-  if (stream && typeof stream === 'object' && Symbol.asyncIterator in stream) {
-    const chunks: Uint8Array[] = []
-    let total = 0
-    for await (const part of stream as AsyncIterable<Uint8Array | Buffer | string>) {
-      const chunk =
-        typeof part === 'string'
-          ? new TextEncoder().encode(part)
-          : part instanceof Uint8Array
-            ? part
-            : new Uint8Array(part)
-      chunks.push(chunk)
-      total += chunk.length
-    }
-    const out = new Uint8Array(total)
-    let offset = 0
-    for (const chunk of chunks) {
-      out.set(chunk, offset)
-      offset += chunk.length
-    }
-    return out
-  }
-
-  throw new Error('Unable to read generated PDF stream')
-}
-
 export async function renderPayslipPdf(data: PayslipPdfData): Promise<Uint8Array> {
-  const file = pdf(<PayslipDocument data={data} />)
-  const stream = await file.toBuffer()
-  return streamToUint8Array(stream)
+  const buffer = await renderToBuffer(<PayslipDocument data={data} />)
+  const bytes = new Uint8Array(buffer.length)
+  bytes.set(buffer)
+  return bytes
 }
 
