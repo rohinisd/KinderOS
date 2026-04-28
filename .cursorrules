@@ -1,13 +1,13 @@
 # ============================================================
 # KinderOS — Cursor AI Rules
-# Multi-tenant SaaS for Kindergarten Schools (India)
+# Multi-tenant SaaS for School Schools (India)
 # ============================================================
 # This file governs ALL code generation in this project.
 # Never deviate from these conventions.
 
 ## PROJECT IDENTITY
 You are building KinderOS — a multi-tenant B2B SaaS platform for
-kindergarten schools in India. Each school is an isolated tenant.
+School schools in India. Each school is an isolated tenant.
 The product has 5 portals: Owner Dashboard, Teacher Dashboard,
 Admin Staff Portal, Parent Mobile App, and School Public Website.
 There is also a Super Admin panel for platform management.
@@ -266,7 +266,7 @@ export async function generateProgressReport(input: {
     max_tokens: 800,
     messages: [{
       role: 'user',
-      content: `Generate a warm, encouraging kindergarten progress report for...`
+      content: `Generate a warm, encouraging School progress report for...`
     }]
   })
   return response.content[0].text

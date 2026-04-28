@@ -24,6 +24,13 @@ const StaffSchema = z.object({
   department: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).default('OTHER'),
   classTeacherId: z.string().cuid().optional(),
+  salary: z.number().int().min(0).optional(),
+  panNumber: z.string().trim().max(20).optional(),
+  uanNumber: z.string().trim().max(30).optional(),
+  esiNumber: z.string().trim().max(30).optional(),
+  bankAccountHolder: z.string().trim().max(120).optional(),
+  bankAccountNumber: z.string().trim().max(40).optional(),
+  bankIfsc: z.string().trim().max(20).optional(),
 })
 
 export async function createStaff(
@@ -44,6 +51,13 @@ export async function createStaff(
         designation: data.designation,
         department: data.department,
         gender: data.gender,
+        salary: data.salary ?? null,
+        panNumber: data.panNumber || null,
+        uanNumber: data.uanNumber || null,
+        esiNumber: data.esiNumber || null,
+        bankAccountHolder: data.bankAccountHolder || null,
+        bankAccountNumber: data.bankAccountNumber || null,
+        bankIfsc: data.bankIfsc || null,
       },
     })
 
@@ -104,6 +118,13 @@ export async function updateStaff(
         ...(input.designation !== undefined && { designation: input.designation }),
         ...(input.department !== undefined && { department: input.department }),
         ...(input.gender && { gender: input.gender }),
+        ...(input.salary !== undefined && { salary: input.salary }),
+        ...(input.panNumber !== undefined && { panNumber: input.panNumber || null }),
+        ...(input.uanNumber !== undefined && { uanNumber: input.uanNumber || null }),
+        ...(input.esiNumber !== undefined && { esiNumber: input.esiNumber || null }),
+        ...(input.bankAccountHolder !== undefined && { bankAccountHolder: input.bankAccountHolder || null }),
+        ...(input.bankAccountNumber !== undefined && { bankAccountNumber: input.bankAccountNumber || null }),
+        ...(input.bankIfsc !== undefined && { bankIfsc: input.bankIfsc || null }),
       },
     })
 

@@ -36,6 +36,13 @@ type StaffMember = {
   department: string | null
   status: string
   gender: string
+  salary: number | null
+  panNumber: string | null
+  uanNumber: string | null
+  esiNumber: string | null
+  bankAccountHolder: string | null
+  bankAccountNumber: string | null
+  bankIfsc: string | null
   classesAsTeacher: { id: string; name: string }[]
 }
 
@@ -162,6 +169,13 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
           designation,
           department: (form.get('department') as string) || undefined,
           gender: form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER',
+          salary: Math.max(0, Math.round(Number(form.get('salaryInr') || 0) * 100)),
+          panNumber: (form.get('panNumber') as string) || undefined,
+          uanNumber: (form.get('uanNumber') as string) || undefined,
+          esiNumber: (form.get('esiNumber') as string) || undefined,
+          bankAccountHolder: (form.get('bankAccountHolder') as string) || undefined,
+          bankAccountNumber: (form.get('bankAccountNumber') as string) || undefined,
+          bankIfsc: (form.get('bankIfsc') as string) || undefined,
         }
         const payload =
           editing.role === 'OWNER'
@@ -187,6 +201,13 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
           designation,
           department: (form.get('department') as string) || undefined,
           gender: (form.get('gender') as 'MALE' | 'FEMALE' | 'OTHER') || 'OTHER',
+          salary: Math.max(0, Math.round(Number(form.get('salaryInr') || 0) * 100)),
+          panNumber: (form.get('panNumber') as string) || undefined,
+          uanNumber: (form.get('uanNumber') as string) || undefined,
+          esiNumber: (form.get('esiNumber') as string) || undefined,
+          bankAccountHolder: (form.get('bankAccountHolder') as string) || undefined,
+          bankAccountNumber: (form.get('bankAccountNumber') as string) || undefined,
+          bankIfsc: (form.get('bankIfsc') as string) || undefined,
         })
         if (result.success) {
           toast.success('Staff member added')
@@ -398,6 +419,43 @@ export function StaffClient({ staff }: { staff: StaffMember[] }) {
               <div className="space-y-1.5">
                 <Label htmlFor="department">Department</Label>
                 <Input id="department" name="department" defaultValue={editing?.department ?? ''} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="salaryInr">Monthly CTC (INR)</Label>
+                <Input id="salaryInr" name="salaryInr" type="number" min="0" step="1" defaultValue={editing?.salary ? Math.round(editing.salary / 100) : ''} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="panNumber">PAN Number</Label>
+                <Input id="panNumber" name="panNumber" defaultValue={editing?.panNumber ?? ''} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="uanNumber">UAN (PF)</Label>
+                <Input id="uanNumber" name="uanNumber" defaultValue={editing?.uanNumber ?? ''} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="esiNumber">ESI Number</Label>
+                <Input id="esiNumber" name="esiNumber" defaultValue={editing?.esiNumber ?? ''} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="bankAccountHolder">Bank Account Holder</Label>
+              <Input id="bankAccountHolder" name="bankAccountHolder" defaultValue={editing?.bankAccountHolder ?? ''} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="bankAccountNumber">Bank Account Number</Label>
+                <Input id="bankAccountNumber" name="bankAccountNumber" defaultValue={editing?.bankAccountNumber ?? ''} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bankIfsc">IFSC Code</Label>
+                <Input id="bankIfsc" name="bankIfsc" defaultValue={editing?.bankIfsc ?? ''} />
               </div>
             </div>
 

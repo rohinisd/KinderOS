@@ -1,18 +1,18 @@
 # KinderOS — Product Requirements Document (PRD)
-## Version 1.0 | Multi-tenant SaaS for Kindergarten Schools, India
+## Version 1.0 | Multi-tenant SaaS for School Schools, India
 
 ---
 
 ## 1. Product Overview
 
-**KinderOS** is a white-label, multi-tenant SaaS platform for kindergarten and pre-primary schools in India. Each school gets a fully branded experience — their own app, website, and back-office — powered by the same infrastructure.
+**KinderOS** is a white-label, multi-tenant SaaS platform for School and pre-primary schools in India. Each school gets a fully branded experience — their own app, website, and back-office — powered by the same infrastructure.
 
 ### Core Value Proposition
-> "Give every kindergarten their own digital school in 30 minutes, for less than ₹6,000/month."
+> "Give every School their own digital school in 30 minutes, for less than ₹6,000/month."
 
 ### Target Market
-- Primary: Independent kindergartens & pre-primary schools in Tier 1/2 Indian cities
-- Secondary: Kindergarten franchise chains (EuroKids, Kidzee, ORCHIDS)
+- Primary: Independent Schools & pre-primary schools in Tier 1/2 Indian cities
+- Secondary: School franchise chains (EuroKids, Kidzee, ORCHIDS)
 - Geographic focus: Karnataka first (Dharwad, Hubli, Bangalore, Mysore)
 
 ---
@@ -233,7 +233,7 @@ School (tenant)
 ## 6. Go-to-Market
 
 ### Phase 0 (Months 1-3): Dharwad/Hubli Zero Market
-- 10 free pilots with local kindergartens
+- 10 free pilots with local Schools
 - Build real case studies with actual usage data
 - Iterate on UX based on school owner feedback
 - Milestone: 5 paying schools by month 3

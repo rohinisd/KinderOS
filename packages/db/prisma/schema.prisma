@@ -1,6 +1,6 @@
 // ============================================================
 // KinderOS — Prisma Schema
-// Multi-tenant kindergarten SaaS (India)
+// Multi-tenant School SaaS (India)
 // ============================================================
 // CONVENTIONS:
 //   - schoolId on every tenant-scoped model (from Clerk orgId)
@@ -80,6 +80,10 @@ model School {
   routes       TransportRoute[]
   academicYears AcademicYear[]
   studentLeaveRequests StudentLeaveRequest[]
+  salaryStructures SalaryStructure[]
+  payrollRuns       PayrollRun[]
+  payrollItems      PayrollItem[]
+  salaryAdvances    SalaryAdvance[]
 
   @@index([clerkOrgId])
   @@index([slug])
@@ -264,6 +268,11 @@ model Staff {
   // Documents
   aadharNumber String?
   panNumber    String?
+  uanNumber    String?
+  esiNumber    String?
+  bankAccountHolder String?
+  bankAccountNumber String?
+  bankIfsc         String?
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -278,6 +287,9 @@ model Staff {
   reviewedStudentLeaves StudentLeaveRequest[] @relation("StudentLeaveReviewedBy")
   createdSpotlights  SchoolSpotlight[] @relation("SchoolSpotlightCreator")
   reviewedSpotlights SchoolSpotlight[] @relation("SchoolSpotlightReviewer")
+  salaryStructure    SalaryStructure?
+  payrollItems       PayrollItem[]
+  salaryAdvances     SalaryAdvance[]
 
   @@index([schoolId])
   @@map("staff")
@@ -307,6 +319,134 @@ enum StaffStatus {
   ACTIVE
   ON_LEAVE
   INACTIVE
+}
+
+enum PayrollRunStatus {
+  DRAFT
+  PROCESSED
+  LOCKED
+}
+
+model SalaryStructure {
+  id        String   @id @default(cuid())
+  schoolId  String
+  staffId   String   @unique
+
+  ctcMonthly             Int     @default(0) // in paise
+  basicPercent           Int     @default(50)
+  hraPercent             Int     @default(40)
+  daPercent              Int     @default(0)
+  conveyanceAllowance    Int     @default(160000) // in paise
+  pfEnabled              Boolean @default(true)
+  esiEnabled             Boolean @default(true)
+  professionalTaxMonthly Int     @default(20000) // in paise
+  tdsMonthly             Int     @default(0) // in paise
+  lateDeductionPerPunch  Int     @default(5000) // in paise
+
+  customEarnings   Json  @default("[]") // [{ label, amountPaise }]
+  customDeductions Json  @default("[]") // [{ label, amountPaise }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staff  Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, staffId])
+  @@index([schoolId])
+  @@map("salary_structures")
+}
+
+model PayrollRun {
+  id        String           @id @default(cuid())
+  schoolId  String
+  month     Int
+  year      Int
+  status    PayrollRunStatus @default(DRAFT)
+  processedById String?
+  processedAt DateTime?
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  items  PayrollItem[]
+
+  @@unique([schoolId, month, year])
+  @@index([schoolId, year, month])
+  @@map("payroll_runs")
+}
+
+model PayrollItem {
+  id        String @id @default(cuid())
+  runId     String
+  schoolId  String
+  staffId   String
+
+  attendanceDays Int   @default(0)
+  presentDays    Int   @default(0)
+  lateCount      Int   @default(0)
+  lwpDays        Float @default(0)
+
+  ctcMonthly             Int @default(0)
+  earningBasic           Int @default(0)
+  earningHra             Int @default(0)
+  earningDa              Int @default(0)
+  earningConveyance      Int @default(0)
+  earningSpecial         Int @default(0)
+  earningOvertime        Int @default(0)
+  earningBonus           Int @default(0)
+  earningIncentive       Int @default(0)
+  employerPfContribution Int @default(0)
+  employerEsiContribution Int @default(0)
+
+  deductionPfEmployee       Int @default(0)
+  deductionEsiEmployee      Int @default(0)
+  deductionProfessionalTax  Int @default(0)
+  deductionTds              Int @default(0)
+  deductionLwp              Int @default(0)
+  deductionLate             Int @default(0)
+  deductionAdvanceRecovery  Int @default(0)
+
+  customEarnings   Json @default("[]")
+  customDeductions Json @default("[]")
+  structureSnapshot Json @default("{}")
+
+  grossEarnings   Int @default(0)
+  totalDeductions Int @default(0)
+  netPay          Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  run    PayrollRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  school School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staff  Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, staffId])
+  @@index([schoolId])
+  @@index([staffId])
+  @@map("payroll_items")
+}
+
+model SalaryAdvance {
+  id         String  @id @default(cuid())
+  schoolId   String
+  staffId    String
+  amount     Int     // in paise
+  recoveredAmount Int @default(0)
+  reason     String?
+  issuedOn   DateTime @default(now())
+  isSettled  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staff  Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, staffId, isSettled])
+  @@map("salary_advances")
 }
 
 // ─────────────────────────────────────────

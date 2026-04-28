@@ -27,6 +27,7 @@ import {
   CalendarDays,
   ImageIcon,
   Database,
+  Wallet,
 } from 'lucide-react'
 
 type Portal = 'owner' | 'teacher' | 'admin' | 'superadmin'
@@ -84,6 +85,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Announcements', href: '/dashboard/announcements', icon: Megaphone },
     { label: 'Customize', href: '/dashboard/customize', icon: Palette },
     { label: 'School website', href: '/office/website', icon: Globe },
+    { label: 'Payroll', href: '/dashboard/payroll', icon: Wallet },
     { label: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
     { label: 'Settings', href: '/dashboard/settings', icon: Settings },
   ],
@@ -110,6 +112,7 @@ const navItems: Record<Portal, { label: string; href: string; icon: React.Elemen
     { label: 'Announcements', href: '/office/announcements', icon: Megaphone },
     { label: 'School Events', href: '/office/events', icon: ImageIcon },
     { label: 'School website', href: '/office/website', icon: Globe },
+    { label: 'Payroll', href: '/office/payroll', icon: Wallet },
   ],
   superadmin: [
     { label: 'Schools', href: '/admin/tenants', icon: Building2 },

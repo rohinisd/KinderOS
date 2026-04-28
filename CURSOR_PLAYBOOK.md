@@ -581,7 +581,7 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-export async function generateKindergartenReport(input: {
+export async function generateSchoolReport(input: {
   studentName: string
   gender: 'boy' | 'girl'
   className: string
@@ -594,7 +594,7 @@ export async function generateKindergartenReport(input: {
   teacherName: string
   schoolName: string
 }): Promise<string> {
-  const prompt = `You are writing a warm, encouraging kindergarten progress report 
+  const prompt = `You are writing a warm, encouraging School progress report 
   for parents in India. Write in clear, simple English that non-native speakers 
   can understand easily. Be positive and supportive.
   

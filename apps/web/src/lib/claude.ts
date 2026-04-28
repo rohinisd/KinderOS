@@ -24,7 +24,7 @@ export async function generateProgressReport(input: {
     messages: [
       {
         role: 'user',
-        content: `Generate a warm, encouraging kindergarten progress report.
+        content: `Generate a warm, encouraging School progress report.
 
 Student: ${input.studentName}
 Class: ${input.className}
@@ -41,7 +41,7 @@ Write 3 paragraphs:
 2. Subject-specific highlights and areas of growth
 3. Encouragement and suggestions for parents
 
-Keep it under 250 words. Use the child's first name. This is for Indian kindergarten parents.`,
+Keep it under 250 words. Use the child's first name. This is for Indian School parents.`,
       },
     ],
   })

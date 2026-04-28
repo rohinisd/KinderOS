@@ -88,7 +88,7 @@ export function PlatformMarketing() {
       <section className="mx-auto max-w-4xl px-4 pb-16 pt-16 text-center sm:pt-20">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-1.5 text-xs font-medium text-brand-700">
           <CheckCircle2 className="h-3.5 w-3.5" />
-          Built for kindergarten schools in India
+          Built for every school across India
         </div>
         <h1 className="text-4xl font-bold leading-tight text-slate-900 sm:text-5xl">
           Run your school like a <span className="text-brand-600">modern institution</span>
@@ -182,7 +182,7 @@ export function PlatformMarketing() {
       <section className="border-t border-slate-100 bg-brand-600">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
           <GraduationCap className="mx-auto mb-4 h-10 w-10 text-white/90" />
-          <h2 className="mb-3 text-2xl font-bold text-white">Ready to digitise your kindergarten?</h2>
+          <h2 className="mb-3 text-2xl font-bold text-white">Ready to digitise your School?</h2>
           <p className="mb-8 text-brand-100">Talk to your platform admin to provision a school, or sign in if you already have access.</p>
           <Link
             href="/sign-in"

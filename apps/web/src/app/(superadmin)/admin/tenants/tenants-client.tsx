@@ -255,7 +255,7 @@ export function TenantsClient({ schools }: { schools: SchoolRow[] }) {
                 id="name"
                 name="name"
                 required
-                placeholder="e.g. Little Stars Kindergarten"
+                placeholder="e.g. Little Stars School"
                 onChange={(e) => {
                   const slugInput = document.getElementById('slug') as HTMLInputElement | null
                   if (slugInput && !slugInput.dataset.manual) {

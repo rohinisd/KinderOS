@@ -27,6 +27,13 @@ export default async function OfficeStaffPage() {
     department: s.department,
     status: s.status,
     gender: s.gender,
+    salary: s.salary,
+    panNumber: s.panNumber,
+    uanNumber: s.uanNumber,
+    esiNumber: s.esiNumber,
+    bankAccountHolder: s.bankAccountHolder,
+    bankAccountNumber: s.bankAccountNumber,
+    bankIfsc: s.bankIfsc,
     classesAsTeacher: s.classesAsTeacher,
   }))
 
