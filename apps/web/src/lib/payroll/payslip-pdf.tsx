@@ -42,7 +42,7 @@ export type PayslipPdfData = {
 
 function formatCurrency(paise: number): string {
   const amount = paise / 100
-  return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
+  return `INR ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 function monthLabel(month: number, year: number): string {
