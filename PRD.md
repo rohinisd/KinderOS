@@ -1,11 +1,12 @@
-# KinderOS — Product Requirements Document (PRD)
-## Version 1.0 | Multi-tenant SaaS for School Schools, India
+# VidyaPrabandha — Product Requirements Document (PRD)
+## Version 1.0 | Multi-tenant SaaS for pre-primary and primary schools, India
+> Internal codename: KinderOS (still used for npm packages and folder names).
 
 ---
 
 ## 1. Product Overview
 
-**KinderOS** is a white-label, multi-tenant SaaS platform for School and pre-primary schools in India. Each school gets a fully branded experience — their own app, website, and back-office — powered by the same infrastructure.
+**VidyaPrabandha** is a white-label, multi-tenant SaaS platform for pre-primary and primary schools in India. Each school gets a fully branded experience — their own app, website, and back-office — powered by the same infrastructure.
 
 ### Core Value Proposition
 > "Give every School their own digital school in 30 minutes, for less than ₹6,000/month."
@@ -251,15 +252,15 @@ School (tenant)
 
 ### Growth Flywheel
 ```
-School uses KinderOS
+School uses VidyaPrabandha
   → Parents see school's branded app
   → Parents share school's public page on WhatsApp
   → New parents find the school
   → School gets more admissions
-  → School owner recommends KinderOS to peers
+  → School owner recommends VidyaPrabandha to peers
 ```
 
-"Powered by KinderOS" badge on Starter plan public pages.
+"Powered by VidyaPrabandha" badge on Starter plan public pages.
 
 ---
 
@@ -306,5 +307,5 @@ Priority order for MVP:
 
 ---
 
-*Document version 1.0 — KinderOS*
+*Document version 1.0 — VidyaPrabandha*
 *Stack: Next.js 14 · Supabase · Clerk · Prisma · Tailwind · Razorpay · Twilio · Claude API*

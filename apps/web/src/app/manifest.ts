@@ -2,10 +2,10 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'VidhyaPrabandha',
-    short_name: 'VidhyaPrabandha',
+    name: 'VidyaPrabandha',
+    short_name: 'VidyaPrabandha',
     description:
-      'School management platform for School schools: students, attendance, homework, communication, and operations.',
+      'School management platform for pre-primary and primary schools in India: students, attendance, fees, homework, communication, and operations.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

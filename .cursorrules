@@ -1,13 +1,14 @@
 # ============================================================
-# KinderOS — Cursor AI Rules
-# Multi-tenant SaaS for School Schools (India)
+# VidyaPrabandha — Cursor AI Rules
+# Multi-tenant SaaS for pre-primary and primary schools (India)
+# Internal codename: KinderOS (still used for npm packages: @kinderos/*)
 # ============================================================
 # This file governs ALL code generation in this project.
 # Never deviate from these conventions.
 
 ## PROJECT IDENTITY
-You are building KinderOS — a multi-tenant B2B SaaS platform for
-School schools in India. Each school is an isolated tenant.
+You are building VidyaPrabandha (codename: KinderOS) — a multi-tenant B2B SaaS
+platform for pre-primary and primary schools in India. Each school is an isolated tenant.
 The product has 5 portals: Owner Dashboard, Teacher Dashboard,
 Admin Staff Portal, Parent Mobile App, and School Public Website.
 There is also a Super Admin panel for platform management.

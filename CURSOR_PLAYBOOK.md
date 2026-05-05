@@ -1,5 +1,6 @@
-# KinderOS — Cursor Build Playbook
+# VidyaPrabandha — Cursor Build Playbook
 ## Step-by-step prompts to build the complete application
+> Internal codename: KinderOS (still used for npm packages: `@kinderos/*`).
 
 > **How to use this playbook**: Copy each prompt block into Cursor Composer (⌘+I) in sequence.
 > Complete the verification checklist before moving to the next step.
@@ -11,7 +12,7 @@
 
 ### STEP 0 — Initialize monorepo
 ```
-Create a new pnpm monorepo for KinderOS with the following structure:
+Create a new pnpm monorepo for VidyaPrabandha (codename `kinderos`) with the following structure:
 
 kinderos/
 ├── apps/web/         (Next.js 14 App Router, TypeScript strict)
@@ -84,7 +85,7 @@ Using the Prisma schema in schema.prisma (attached), set up the database layer:
 
 ### STEP 2 — Auth & Middleware
 ```
-Set up Clerk authentication with multi-tenancy for KinderOS.
+Set up Clerk authentication with multi-tenancy for VidyaPrabandha.
 
 Requirements:
 - Each school = 1 Clerk Organization

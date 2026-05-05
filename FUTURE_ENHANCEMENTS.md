@@ -1,4 +1,4 @@
-# KinderOS Future Enhancements
+# VidyaPrabandha Future Enhancements
 
 This file tracks future product enhancements discussed during planning.
 

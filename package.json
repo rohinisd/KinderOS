@@ -2,7 +2,7 @@
   "name": "kinderos",
   "version": "0.1.0",
   "private": true,
-  "description": "KinderOS — Multi-tenant SaaS for School Schools (India)",
+  "description": "VidyaPrabandha — Multi-tenant SaaS for pre-primary and primary schools (India)",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",

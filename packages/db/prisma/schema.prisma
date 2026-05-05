@@ -1,6 +1,7 @@
 // ============================================================
-// KinderOS — Prisma Schema
-// Multi-tenant School SaaS (India)
+// VidyaPrabandha — Prisma Schema
+// Multi-tenant pre-primary and primary school SaaS (India)
+// Internal codename: KinderOS (table prefixes / package names use kinderos)
 // ============================================================
 // CONVENTIONS:
 //   - schoolId on every tenant-scoped model (from Clerk orgId)
