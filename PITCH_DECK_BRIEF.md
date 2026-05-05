@@ -119,7 +119,78 @@ This is **not a slide deck or a prototype**. It is a working multi-tenant SaaS, 
 
 ---
 
-## 4. Tech Stack & Architecture
+## 4. Messaging & Notifications — what's live today
+
+Communication is the single biggest pain pre-primary schools want fixed. VidyaPrabandha solves it across **four channels**, with **four use cases live in production today** and a clear roadmap for the rest. We are honest about what is shipped vs scaffolded.
+
+### 4.1 Channels (the "how")
+
+| Channel | Provider | Code path | Production status |
+|---|---|---|---|
+| **WhatsApp** | Twilio (sandbox `+1 415 523 8886`; production sender pending Meta approval) | `apps/web/src/lib/twilio.ts` | ✅ **Live** — real messages delivered |
+| **SMS** | Twilio (same account) | `apps/web/src/lib/twilio.ts` | ⚠️ Helper shipped, no production sender number procured yet — falls back to console log |
+| **Email** | Resend (`noreply@kinderos.in`) | `apps/web/src/lib/resend.ts` | ✅ Account live, helper shipped (fee-receipt template ready), no triggers wired yet |
+| **Push (web/PWA)** | Firebase Cloud Messaging | `apps/web/src/lib/firebase.ts` | ⚠️ SDK wired, awaiting Firebase project credentials |
+
+### 4.2 Triggers shipped (the "when")
+
+Four end-to-end flows are working in production today:
+
+| # | Trigger | Channel | Where in the product | Code |
+|---|---|---|---|---|
+| 1 | **Manual fee reminder** — Office or Owner clicks "Send Reminder" on an outstanding invoice | WhatsApp → primary parent | `Owner Dashboard → Fees`, `Office → Fees` | `actions/fees.ts → sendFeeReminderToParent` |
+| 2 | **Daily auto fee reminder** — server cron sweeps every overdue / due-soon invoice | WhatsApp → primary parent (and auto-flips PENDING → OVERDUE) | Vercel Cron, `08:30 IST` daily | `app/api/cron/route.ts` (auth: `Bearer CRON_SECRET`) |
+| 3 | **Absence alert** — teacher marks any student `ABSENT` in the daily attendance grid | WhatsApp → primary parent, in real time | `Teacher Portal → Attendance` | `actions/attendance.ts → markClassAttendance` |
+| 4 | **Announcement broadcast** — Owner publishes an announcement and ticks the WhatsApp channel | WhatsApp → all active parents of the school | `Owner / Office → Announcements` | `actions/announcements.ts → createAnnouncement` |
+
+### 4.3 What's NOT wired yet (deliberate next-quarter list)
+
+Helpers exist for these but no production trigger fires them yet — they are explicit roadmap items, not hidden gaps:
+
+- **Email fee receipt** on successful Razorpay payment (template already drafted in `lib/resend.ts → sendFeeReceiptEmail`)
+- **WhatsApp confirmation** on admission lead capture (the "thanks, we'll call you back" message)
+- **Push notifications** for any event (Firebase project not provisioned)
+- **Event reminders** the day before (cron pattern, ~1 hour of work)
+- **Welcome WhatsApp** when a lead is converted to a student
+- **Progress-report ready** notification to parents
+- **Staff leave approved/rejected** notifications
+- **Birthday wishes** to students/parents
+- **PTM slot booking** confirmations
+- **OTP**-based parent login (we use email magic links via Clerk today)
+
+### 4.4 Coverage matrix at a glance
+
+| Use case | WhatsApp | SMS | Email | Push |
+|---|:-:|:-:|:-:|:-:|
+| Manual fee reminder (button) | ✅ | – | – | – |
+| Daily auto fee reminder (cron 08:30 IST) | ✅ | – | – | – |
+| Student absent → parent | ✅ | – | – | – |
+| Owner publishes announcement | ✅ | – | – | – |
+| Payment received → receipt to parent | – | – | ⚠️ helper exists | – |
+| Lead added to admissions CRM | – | – | – | – |
+| New assignment / homework | – | – | – | – |
+| Progress report ready | – | – | – | – |
+| Event reminder (T–1 day) | – | – | – | – |
+| Staff leave approved/rejected | – | – | – | – |
+| OTP login | – | – | – | – |
+
+Legend: ✅ shipped — ⚠️ helper exists, trigger pending — `–` not yet planned for v1.
+
+### 4.5 Production hardening already done
+
+- **Defensive env-var loading:** the WhatsApp sender reads either `TWILIO_WHATSAPP_NUMBER` or `TWILIO_WHATSAPP_FROM`, so misconfiguration can't silently fall back to the sandbox.
+- **Cron protection:** the daily fee-reminder endpoint requires a `Bearer CRON_SECRET` header; a 64-char random secret is set in Vercel.
+- **Graceful degradation:** without Twilio credentials the app logs `[WhatsApp DEV] → +91...: <body>` to the server console instead of crashing — useful for local dev and CI.
+- **Indian phone normalisation:** every recipient is normalised to `+91XXXXXXXXXX` before sending.
+- **Multi-tenant safety:** every messaging trigger is wrapped in a server action that calls `requireSchoolAuth()` first, so a school can never message another school's parents.
+
+### 4.6 Pitch-demo guarantee
+
+For the live pitch, two demo parents (`Vihaan Kumar` and `Myra Nair` in the seeded data) use the founder's verified WhatsApp number, so the audience can see WhatsApp **arrive on the founder's phone within 2 seconds** of clicking "Send Reminder" or marking a student absent. This works today on the production URL `https://vidya.uttamai.com` against the live Twilio account.
+
+---
+
+## 5. Tech Stack & Architecture
 
 | Layer | Choice | Why |
 |-------|--------|-----|
@@ -165,7 +236,7 @@ This is **not a slide deck or a prototype**. It is a working multi-tenant SaaS, 
 
 ---
 
-## 5. Pricing & Plans
+## 6. Pricing & Plans
 
 | Plan | Price (₹/month) | Students | Highlights |
 |------|----------------|----------|------------|
@@ -177,7 +248,7 @@ Add-ons: extra WhatsApp messages (₹0.50/msg), extra storage (₹499/10 GB), SM
 
 ---
 
-## 6. Market & Go-to-Market
+## 7. Market & Go-to-Market
 
 ### Market size (TAM)
 
@@ -214,7 +285,7 @@ The "Powered by VidyaPrabandha" badge on Starter plan public pages turns every s
 
 ---
 
-## 7. Why Now
+## 8. Why Now
 
 1. **Razorpay + UPI ubiquity** — Indian parents will pay digitally; cash collection is now a friction, not a default.
 2. **WhatsApp Business API** is mature — template messaging at scale is finally reliable and cheap.
@@ -225,7 +296,7 @@ The "Powered by VidyaPrabandha" badge on Starter plan public pages turns every s
 
 ---
 
-## 8. Differentiation
+## 9. Differentiation
 
 | Competitor approach | VidyaPrabandha approach |
 |---------------------|-------------------------|
@@ -239,7 +310,7 @@ The "Powered by VidyaPrabandha" badge on Starter plan public pages turns every s
 
 ---
 
-## 9. Traction Milestones (3-month / 6-month targets)
+## 10. Traction Milestones (3-month / 6-month targets)
 
 | Metric | Month 3 | Month 6 |
 |--------|---------|---------|
@@ -252,7 +323,7 @@ The "Powered by VidyaPrabandha" badge on Starter plan public pages turns every s
 
 ---
 
-## 10. Roadmap
+## 11. Roadmap
 
 ### Shipped ✅
 - Multi-tenant auth (Clerk + Postgres + RLS)
@@ -283,7 +354,7 @@ The "Powered by VidyaPrabandha" badge on Starter plan public pages turns every s
 
 ---
 
-## 11. Team Ask (Closing Slide)
+## 12. Team Ask (Closing Slide)
 
 We are looking for:
 
@@ -306,15 +377,16 @@ Pilot signup → talk to the founder, or visit the platform landing page and req
 7. **Product Tour — Parent PWA** (Section 3.4)
 8. **Product Tour — School's Own Public Website + Custom Domain** (Section 3.5)
 9. **Product Tour — Super Admin Console** (Section 3.6)
-10. **Tech & Architecture** — multi-tenant, Indian-compliance-first. (Section 4)
-11. **Pricing** — 3 plans. (Section 5)
-12. **Market & GTM** — Karnataka first, India next. (Section 6)
-13. **Why Now** — UPI, WhatsApp, PWAs, AI, dev velocity. (Section 7)
-14. **Differentiation vs incumbents** (Section 8)
-15. **Traction Targets** (Section 9)
-16. **Roadmap — Shipped vs Next** (Section 10)
-17. **The Ask** — design partners + advisors + channels. (Section 11)
-18. **Thank You / Contact**
+10. **Messaging & Notifications** — 4 channels, 4 live triggers, honest roadmap. (Section 4)
+11. **Tech & Architecture** — multi-tenant, Indian-compliance-first. (Section 5)
+12. **Pricing** — 3 plans. (Section 6)
+13. **Market & GTM** — Karnataka first, India next. (Section 7)
+14. **Why Now** — UPI, WhatsApp, PWAs, AI, dev velocity. (Section 8)
+15. **Differentiation vs incumbents** (Section 9)
+16. **Traction Targets** (Section 10)
+17. **Roadmap — Shipped vs Next** (Section 11)
+18. **The Ask** — design partners + advisors + channels. (Section 12)
+19. **Thank You / Contact**
 
 ---
 
