@@ -21,7 +21,24 @@
         "TWILIO_ACCOUNT_SID",
         "TWILIO_AUTH_TOKEN",
         "TWILIO_WHATSAPP_FROM",
-        "RESEND_API_KEY"
+        "TWILIO_WHATSAPP_NUMBER",
+        "TWILIO_SMS_NUMBER",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "ANTHROPIC_API_KEY",
+        "CRON_SECRET",
+        "SUPER_ADMIN_EMAILS",
+        "PLATFORM_HOSTS",
+        "NEXT_PUBLIC_APP_NAME",
+        "NEXT_PUBLIC_SUPPORT_EMAIL",
+        "RAZORPAY_WEBHOOK_SECRET",
+        "CLOUDFLARE_ACCOUNT_ID",
+        "R2_ACCESS_KEY_ID",
+        "R2_SECRET_ACCESS_KEY",
+        "R2_BUCKET_NAME",
+        "R2_PUBLIC_URL",
+        "GITHUB_BACKUP_REPO",
+        "GITHUB_BACKUP_TOKEN"
       ]
     },
     "dev": {

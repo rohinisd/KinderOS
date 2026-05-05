@@ -7,7 +7,10 @@ const client = isConfigured
   ? twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!)
   : null
 
-const WHATSAPP_FROM = process.env.TWILIO_WHATSAPP_NUMBER ?? 'whatsapp:+14155238886'
+const WHATSAPP_FROM =
+  process.env.TWILIO_WHATSAPP_NUMBER ??
+  process.env.TWILIO_WHATSAPP_FROM ??
+  'whatsapp:+14155238886'
 
 type SendResult = { sid: string } | null
 

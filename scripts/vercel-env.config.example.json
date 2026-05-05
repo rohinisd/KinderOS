@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy this file to scripts/vercel-env.config.json (gitignored) and fill in real values. Then run: node scripts/vercel-set-env.mjs --token=vcp_xxx",
+  "NEXT_PUBLIC_APP_NAME": "VidyaPrabandha",
+  "NEXT_PUBLIC_APP_URL": "https://your-domain.example.com",
+  "NEXT_PUBLIC_SUPPORT_EMAIL": "support@example.com",
+  "EMAIL_FROM": "VidyaPrabandha <noreply@example.com>",
+  "PLATFORM_HOSTS": "your-domain.example.com,localhost",
+  "TWILIO_ACCOUNT_SID": "AC_REPLACE_WITH_YOUR_TWILIO_ACCOUNT_SID",
+  "TWILIO_AUTH_TOKEN": "REPLACE_WITH_YOUR_TWILIO_AUTH_TOKEN",
+  "TWILIO_WHATSAPP_FROM": "whatsapp:+14155238886",
+  "TWILIO_WHATSAPP_NUMBER": "whatsapp:+14155238886",
+  "CRON_SECRET": "REPLACE_WITH_A_LONG_RANDOM_STRING_AT_LEAST_32_CHARS",
+  "ANTHROPIC_API_KEY": "",
+  "RAZORPAY_WEBHOOK_SECRET": ""
+}

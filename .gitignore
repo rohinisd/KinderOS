@@ -5,7 +5,11 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.production.tmp
+.env.verify.tmp
+.env.check.tmp
 APIKeys.md
+scripts/vercel-env.config.json
 
 # build outputs
 .next/
